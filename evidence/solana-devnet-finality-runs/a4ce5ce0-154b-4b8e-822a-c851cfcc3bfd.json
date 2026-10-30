@@ -1,0 +1,21 @@
+{
+  "checked": "2026-10-30T21:49:07.229Z",
+  "chain": "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1",
+  "genesisHash": "EtWTRABZaYq6iMfeYKouRu166VU2xqa1wcaWoxPkrZBG",
+  "signature": "3h6kdXphHZi8jcr7vRRLofpB8zrYVjJPfgMA435iUEzbmXbm3TXWrRfFkyTsNnaLYPJEGmFtyWmxeVRf7Qci5m3",
+  "slot": 516914340,
+  "feeLamports": "5000",
+  "recipientBalanceIncrease": "1000000",
+  "status": "finalized",
+  "transactionConfirmed": true,
+  "finalized": true,
+  "signatureVerified": true,
+  "provider": "https://api.devnet.solana.com",
+  "scope": "Provider-reported finalized receipt and signature status agree; signature, fixed message and balance effects verified. Not independent consensus proof.",
+  "submissions": 0,
+  "thorchainSwap": false,
+  "productionReady": false,
+  "receiptCommit": "14d61fc6cbb278509adf278e5d49fe78b699e354",
+  "reconcilerCommit": "fe115049123c6d0e4183ad0204995496f9f44cfa",
+  "reconcilerDirty": false
+}

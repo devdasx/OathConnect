@@ -1,0 +1,13 @@
+{
+  "checked": "2026-10-30T21:48:57.188Z",
+  "source": "https://faucet.zalalena.com/solana/",
+  "network": "Solana devnet",
+  "genesisHash": "EtWTRABZaYq6iMfeYKouRu166VU2xqa1wcaWoxPkrZBG",
+  "recipient": "Eb1ZTGpmfHKzGqwGY6p8f4d9kxVaStEWJbZ6LE3oDNXC",
+  "signature": "4i4Q3HJj46oTEdc1AUNBhJhDLkjFUGqzRj2gQzU2tK5htWZH34zU2YAprUY56TC5gDsdDRxpyuUvDDwbXiT4ynKr",
+  "slot": 516914301,
+  "recipientLamportIncrease": "25000000",
+  "cost": "Free; no mainnet assets spent",
+  "confirmation": "RPC finalized commitment; not independent consensus proof",
+  "privateKeys": "Disposable fixture keys remained in process and were discarded on exit"
+}

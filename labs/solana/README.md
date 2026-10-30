@@ -44,8 +44,19 @@ Install the pinned comparison SDK with `npm ci --ignore-scripts --prefix labs/so
 then run host tests with `node --test labs/solana/*.test.mjs`. The cross-check
 compares exact message bytes and signature verification against Solana Foundation
 `@solana/web3.js` 3.1.1; it performs no network calls. These tests do not
-establish live network qualification. No funded run of this revised fixture has
-yet been completed.
+establish live network qualification. A funded run from clean commit
+`14d61fc6cbb278509adf278e5d49fe78b699e354` completed through the local relay in
+devnet slot 516914340 with one approval, signature and submission. See the
+[receipt](../../evidence/solana-devnet.json) and
+[free funding evidence](../../evidence/solana-devnet-funding.json).
+
+Run `node labs/solana/reconcile.mjs local` (or `live`) to check the retained
+public signature at finalized commitment without signing or sending again.
+It verifies the signature, fixed transfer, receipt effects and agreement with
+the provider's finalized signature status. It stores only filtered public
+evidence, never the signed transaction bytes. This is one RPC provider's
+assertion of finality, not independent consensus proof. A missing receipt is
+not permission to resubmit. The deployed Solana test is still open.
 
 Primary references:
 
