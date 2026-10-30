@@ -48,3 +48,14 @@ The read-only reconciliation command and five adversarial tests make the
 provider receipt/canonical-block/finalized-height checks reproducible. They do
 not verify consensus independently. Token calls, other EVM networks, THORChain
 swaps, external audit and production qualification remain open.
+
+## Local Solana qualification
+
+A free faucet funded the disposable devnet account, and clean commit
+`14d61fc6cbb278509adf278e5d49fe78b699e354` completed one fixed 0.001 SOL
+transfer through the local relay in slot 516914340. Its exact transaction,
+signature and receipt effects passed validation. The read-only reconciliation
+command checks finalized receipt/status consistency without sending again.
+All 18 Solana fixture host tests pass, including four finality reconciliation
+tests. The deployed test, token/program transactions, other chains and
+independent audit remain open. This milestone does not integrate Oath Wallet.
