@@ -55,7 +55,7 @@ jobs:
         with:
           persist-credentials: false
       - run: swift test
-      - run: swift build --package-path labs/browser-native/native
+      - run: swift test --package-path labs/browser-native/native
   typescript:
     name: TypeScript and Cloudflare runtime
     runs-on: ubuntu-24.04

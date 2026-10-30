@@ -18,8 +18,14 @@ func readBounded(_ path: String) throws -> Data {
 }
 func writePrivate(_ value: JSONValue, _ path: String) throws {
     // The controller creates a fresh 0700 directory; these files never leave it.
-    try value.canonical().write(to: URL(fileURLWithPath: path), options: [.atomic, .withoutOverwriting])
-    try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: path)
+    // Foundation traps when .atomic and .withoutOverwriting are combined.
+    // Publish a complete private temporary file with an exclusive destination move.
+    let destination = URL(fileURLWithPath: path)
+    let temporary = destination.appendingPathExtension(UUID().uuidString + ".tmp")
+    try value.canonical().write(to: temporary, options: .withoutOverwriting)
+    defer {try? FileManager.default.removeItem(at: temporary)}
+    try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: temporary.path)
+    try FileManager.default.moveItem(at: temporary, to: destination)
 }
 actor EchoAdapter: WalletAdapter {
     private(set) var approvals = 0, executions = 0
