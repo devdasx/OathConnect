@@ -270,7 +270,7 @@
       "evmChainIdFromOath": null,
       "transport": "generic capability/session protocol",
       "transactionAdapter": "wallet implementation required",
-      "testnetQualification": "Devnet identity verified; free funding returned HTTP 410 before signing; see solana-devnet.json"
+      "testnetQualification": "Fixed 0.001 devnet SOL transfer confirmed through local relay in slot 516914340; finalized receipt/signature status checked; see solana-devnet.json and solana-devnet-finality.json. Deployed test and general-purpose adapter remain open."
     },
     {
       "id": "somnia",

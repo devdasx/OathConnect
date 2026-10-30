@@ -11,9 +11,9 @@
       "https://oathconnect-preview.thuglifex.workers.dev"
     ],
     "keys": {
-      "disposable": "XhohAZ14SfNZYncIe9F6bE20QpJbGCIivijj2EPQNmc"
+      "disposable": "nAphlUhgZe7QIabklY-wV0geVOhAge3D_i2Z9oHiwIM"
     },
-    "enabled": false,
-    "notAfter": 1793389425
+    "enabled": true,
+    "notAfter": 1793400728
   }
 ]
