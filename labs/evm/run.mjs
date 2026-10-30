@@ -7,7 +7,7 @@ import {join} from 'node:path';
 import {setTimeout as delay} from 'node:timers/promises';
 import {canonical, createIdentity, createPairing, joinPairing, ProtocolError} from '@oathconnect/protocol';
 import {Session, WalletAuthorizer} from '@oathconnect/sdk';
-import {EvmAdapter, EvmRpc} from '@oathconnect/evm';
+import {EvmAdapter, EvmRpc, EvmRpcError} from '@oathconnect/evm';
 import {validationRelay} from '../support/relay.mjs';
 import {writeEvidence} from '../support/evidence.mjs';
 
@@ -17,7 +17,7 @@ const started=new Date().toISOString(), commit=execFileSync('git',['rev-parse','
 const dirty=execFileSync('git',['status','--porcelain'],{encoding:'utf8'}).trim().length>0;
 const evidenceName=process.env.OATHCONNECT_LIVE_VALIDATION==='true'?'evm-sepolia-live':'evm-sepolia';
 let stage='network', relay, dapp, wallet, authorizer, fundingDirectory, transactionHash;
-let decisions=0, executions=0, broadcasts=0, adapterFailure;
+let decisions=0, executions=0, broadcasts=0, adapterFailure, submissionStatus, providerFailure;
 const bounded=()=>AbortSignal.timeout(15000);
 const check=(condition,code)=>{if(!condition)throw new ProtocolError(code);};
 async function identity(){
@@ -57,7 +57,11 @@ try {
   const params=[{type:'0x2',chainId:'0xaa36a7',from:sender.address,to:recipient,nonce,gas:'0x5208',value:'0x1',data:'0x',maxFeePerGas:toQuantity(1000000000n),maxPriorityFeePerGas:toQuantity(100000000n)}];
   const adapter=new EvmAdapter(policy,{
     async inspect(plan,signal){
-      try{return await rpc.inspect(plan,signal);}catch(error){adapterFailure=error instanceof ProtocolError?error.code:'unclassified';throw error;}
+      try{return await rpc.inspect(plan,signal);}catch(error){
+        adapterFailure=error instanceof ProtocolError?error.code:'unclassified';
+        if(error instanceof EvmRpcError)providerFailure={method:error.method,code:error.providerCode};
+        throw error;
+      }
     },
     async sign(unsigned,context){
       stage='sign';context.assertActive();check(++executions===1,'evm_lab_duplicate_sign');
@@ -68,7 +72,11 @@ try {
       transactionHash=Transaction.from(signed).hash;
       // Preserve the public hash before submission so an interrupted run can be reconciled.
       writeEvidence(evidenceName,{started,commit,dirty,chain,network:'Ethereum Sepolia',status:'broadcast_pending',hash:transactionHash,transactionConfirmed:false,decisions,executions,broadcasts});
-      return rpc.broadcast(signed,signal);
+      try{return await rpc.broadcast(signed,signal);}catch(error){
+        adapterFailure=error instanceof ProtocolError?error.code:'unclassified';
+        if(error instanceof EvmRpcError)providerFailure={method:error.method,code:error.providerCode};
+        throw error;
+      }
     }
   });
   authorizer=new WalletAuthorizer([cap],new Map([[chain+'/eth_sendTransaction',adapter]]),async(request,review,context)=>{
@@ -77,6 +85,8 @@ try {
   });
   stage='request';const [result]=await Promise.all([dapp.request(cap,'eth_sendTransaction',params),wallet.serveOnce(authorizer)]);
   check(result?.hash===transactionHash&&decisions===1&&executions===1&&broadcasts===1,'evm_lab_result_mismatch');
+  submissionStatus=result.status;
+  writeEvidence(evidenceName,{started,commit,dirty,chain,network:'Ethereum Sepolia',status:'awaiting_receipt',submissionStatus,hash:transactionHash,transactionConfirmed:false,decisions,executions,broadcasts,...(adapterFailure?{adapterFailure}:{}),...(providerFailure?{providerFailure}:{})});
   stage='receipt';let receipt;
   // Read-only reconciliation, including an uncertain broadcast; never resubmit.
   for(let attempt=0;attempt<60;attempt++){
@@ -95,7 +105,7 @@ try {
   writeEvidence(evidenceName,evidence);console.log(JSON.stringify(evidence));
 } catch(error) {
   const code=error instanceof ProtocolError&&/^[a-z0-9_]{1,100}$/.test(error.code)?error.code:'unclassified';
-  const evidence={started,completed:new Date().toISOString(),commit,dirty,network:'Ethereum Sepolia',chain,stage,status:'blocked_or_failed',code,...(adapterFailure?{adapterFailure}:{}),transactionConfirmed:false,decisions,executions,broadcasts,...(transactionHash?{hash:transactionHash}:{}),productionReady:false};
+  const evidence={started,completed:new Date().toISOString(),commit,dirty,network:'Ethereum Sepolia',chain,stage,status:'blocked_or_failed',code,...(adapterFailure?{adapterFailure}:{}),...(submissionStatus?{submissionStatus}:{}),...(providerFailure?{providerFailure}:{}),transactionConfirmed:false,decisions,executions,broadcasts,...(transactionHash?{hash:transactionHash}:{}),productionReady:false};
   writeEvidence(evidenceName,evidence);console.log(JSON.stringify(evidence));process.exitCode=1;
 } finally {
   authorizer?.close();await dapp?.close().catch(()=>{});await wallet?.close().catch(()=>{});await relay?.dispose();

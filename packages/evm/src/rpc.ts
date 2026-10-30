@@ -4,6 +4,10 @@ import type {EvmPlan, EvmState} from './index.js';
 
 const tokenRead = new Interface(['function balanceOf(address) view returns (uint256)', 'function allowance(address,address) view returns (uint256)']);
 const methods = new Set(['eth_chainId','eth_getBlockByNumber','eth_getBalance','eth_getTransactionCount','eth_getCode','eth_call','eth_sendRawTransaction','eth_getTransactionReceipt','eth_gasPrice','eth_maxPriorityFeePerGas']);
+/** Safe provider context only: no response text, params, URLs or signed payloads. */
+export class EvmRpcError extends ProtocolError {
+  constructor(readonly method: string, readonly providerCode: number | null) {super('evm_rpc_rejected');}
+}
 function quantity(value: unknown): string {
   requireThat(typeof value === 'string' && /^0x(0|[1-9a-f][0-9a-f]{0,63})$/.test(value), 'evm_rpc_invalid_quantity');
   return BigInt(value).toString();
@@ -47,7 +51,12 @@ export class EvmRpc {
       requireThat(parsed && typeof parsed === 'object' && !Array.isArray(parsed), 'evm_rpc_invalid_response');
       const value=parsed as Record<string,unknown>;
       requireThat(value.jsonrpc==='2.0' && value.id===id, 'evm_rpc_response_mismatch');
-      requireThat(!Object.hasOwn(value,'error'),'evm_rpc_rejected'); record(value,['jsonrpc','id','result']);
+      if(Object.hasOwn(value,'error')) {
+        const error=value.error;
+        const code=error&&typeof error==='object'&&!Array.isArray(error)?(error as Record<string,unknown>).code:null;
+        throw new EvmRpcError(method,typeof code==='number'&&Number.isSafeInteger(code)?code:null);
+      }
+      record(value,['jsonrpc','id','result']);
       return value.result;
     } catch(error) {
       // Raw provider errors can echo signed bytes, addresses, endpoint credentials or params.

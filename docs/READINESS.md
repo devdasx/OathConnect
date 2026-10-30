@@ -36,6 +36,18 @@ It requires wallet-qualified gas-limit-times-price fee bounds; rollups and other
 models remain unsupported. See [adapter scope and trust limits](../packages/evm/README.md).
 Host tests are not evidence of every EVM network or contract's behavior.
 
+The funded Sepolia fixture first rejected a new recipient before approval or
+signing because the network's account-creation gas requirements had changed.
+The corrected fixture then reached one approval, signature and submission
+attempt, but no receipt was returned. Two providers subsequently returned no
+transaction or receipt and an unchanged sender nonce. This is an unconfirmed
+attempt, not a passed test; the fixture did not resubmit. See the
+[attempt](../evidence/evm-sepolia.json),
+[read-only reconciliation](../evidence/evm-sepolia-reconciliation.json) and
+[gas diagnosis](../evidence/evm-sepolia-diagnosis.json). The original attempt did
+not retain the provider rejection code or submission result; subsequent fixture
+code records only safe status, method and numeric error context.
+
 TypeScript and Swift adapter/approval callbacks receive a request execution
 context that becomes invalid on closure, expiry or completion. Cooperative checks
 after asynchronous signing prevent subsequent broadcast. They cannot retract a

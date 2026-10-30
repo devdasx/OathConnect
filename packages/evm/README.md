@@ -79,6 +79,11 @@ may have occurred; preserve its hash and reconcile receipts without rebroadcasti
 Never retry automatically. Production applications need durable, privacy-safe
 submission tracking before key use. The connection layer does not provide it.
 
+Rejected JSON-RPC responses expose only `EvmRpcError.method` and a safe integer
+`providerCode` (or `null`). Provider message/data, endpoint credentials and signed
+payloads are excluded from the error. The code alone is diagnostic context, not
+proof that a transaction could not have reached the network.
+
 ## Validation and sources
 
 Adversarial host tests cover exact bytes, unsafe quantities, changed signatures,

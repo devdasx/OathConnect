@@ -1,7 +1,7 @@
 import {getAddress, Interface, keccak256, Transaction, formatUnits} from 'ethers';
 import {canonical, digest, integer, nowSeconds, ProtocolError, record, requireThat} from '@oathconnect/protocol';
 import type {ExecutionContext, Review, SigningRequest, WalletAdapter} from '@oathconnect/sdk';
-export {EvmRpc} from './rpc.js';
+export {EvmRpc, EvmRpcError} from './rpc.js';
 
 const UINT256 = (1n << 256n) - 1n;
 const erc20 = new Interface(['function transfer(address to,uint256 amount) returns (bool)', 'function approve(address spender,uint256 amount) returns (bool)']);

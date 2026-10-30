@@ -2,7 +2,7 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {Wallet} from 'ethers';
 import {nowSeconds,random} from '@oathconnect/protocol';
-import {EvmRpc,decodeEvmTransaction,type EvmPolicy} from '@oathconnect/evm';
+import {EvmRpc,EvmRpcError,decodeEvmTransaction,type EvmPolicy} from '@oathconnect/evm';
 const genesis='0x'+'11'.repeat(32),blockHash='0x'+'22'.repeat(32),account=Wallet.createRandom().address,recipient=Wallet.createRandom().address;
 const policy:EvmPolicy={chainId:'11155111',genesisHash:genesis,account,nativeSymbol:'ETH',feeModel:'gas-limit-times-price',maximumGas:'21000',maximumFeePerGas:'1000000000',maximumGasFee:'21000000000000',maximumValue:'1',maximumBlockAge:120,tokens:[]};
 const plan=()=>decodeEvmTransaction({type:'request',id:random(16),chain:'eip155:11155111',account,method:'eth_sendTransaction',expires:nowSeconds()+120,params:[{type:'0x2',chainId:'0xaa36a7',from:account,to:recipient,nonce:'0x0',gas:'0x5208',value:'0x1',data:'0x',maxFeePerGas:'0x3b9aca00',maxPriorityFeePerGas:'0x1'}]},policy);
@@ -35,7 +35,10 @@ test('EVM RPC rejects wrong response IDs, provider errors, oversized replies and
       if(kind==='json')return new Response('secret body not JSON');
       return Response.json(kind==='error'?{jsonrpc:'2.0',id:q.id,error:{code:-32000,message:'signed transaction secret body'}}:{jsonrpc:'2.0',id:'wrong',result:'0x1'});
     });
-    await assert.rejects(rpc.request('eth_sendRawTransaction',['0x00'],signal()),error=>error instanceof Error&&!/secret|signed transaction/.test(error.message));
+    await assert.rejects(rpc.request('eth_sendRawTransaction',['0x00'],signal()),error=>{
+      if(kind==='error'){assert.ok(error instanceof EvmRpcError);assert.equal(error.method,'eth_sendRawTransaction');assert.equal(error.providerCode,-32000);assert.ok(!JSON.stringify(error).includes('secret'));}
+      return error instanceof Error&&!/secret|signed transaction/.test(error.message);
+    });
     assert.equal(attempts,1,kind);
   }
   for(const endpoint of ['http://rpc.example.org','https://user:secret@rpc.example.org','https://rpc.example.org/#secret','not a url'])assert.throws(()=>new EvmRpc(endpoint));
