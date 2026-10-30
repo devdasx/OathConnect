@@ -59,3 +59,14 @@ command checks finalized receipt/status consistency without sending again.
 All 18 Solana fixture host tests pass, including four finality reconciliation
 tests. The deployed test, token/program transactions, other chains and
 independent audit remain open. This milestone does not integrate Oath Wallet.
+
+## 0.3.0-alpha.3 scope
+
+This preview records the confirmed local Solana devnet transfer and the separate
+deployed Solana testnet transfer in slot 458656746, along with free-funding
+receipts, stopped attempts, 21 Solana host tests and read-only finality checks.
+The fixture pins each cluster's endpoint, genesis and capability and never offers
+a mainnet mode. It also carries the earlier deployed Sepolia evidence and
+finality-consistency repair. Package versions advance together; this milestone
+does not add a reusable production Solana adapter. Other chains, broader methods,
+THORChain swaps, operational qualification and independent audit remain open.

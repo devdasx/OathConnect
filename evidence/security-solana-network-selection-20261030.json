@@ -1,0 +1,18 @@
+{
+  "checked": "2026-10-30T22:05:29.681Z",
+  "reviewedCommit": "6380fe2bbb32909698b23e952a33b5e85bab0386",
+  "review": "Internal AI source/diff review; not an independent human security audit",
+  "scope": "Explicit Solana cluster selection, immutable endpoint/genesis/capability pins, signing gates and separate evidence/finality reconciliation",
+  "actionableFindings": 0,
+  "tests": {
+    "command": "node --test labs/solana/*.test.mjs",
+    "passed": 21,
+    "failed": 0
+  },
+  "limitations": [
+    "Host tests do not establish a funded testnet transfer",
+    "Devnet and testnet are distinct clusters",
+    "No mainnet, Oath Wallet integration or production certification"
+  ],
+  "productionReady": false
+}

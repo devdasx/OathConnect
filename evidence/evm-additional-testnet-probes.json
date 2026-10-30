@@ -1,0 +1,26 @@
+{
+  "checked": "2026-10-30T21:55:23.347Z",
+  "operations": "Read-only public network identity and EIP-1898 state probe; no keys or transactions",
+  "results": [
+    {
+      "network": "Avalanche Fuji",
+      "chainId": "43113",
+      "endpoint": "https://api.avax-test.network/ext/bc/C/rpc",
+      "genesisHash": "0x31ced5b9beb7f8782b014660da0cb18cc409f121f408186886e1ca3e8eeca96b",
+      "latestBlock": "60274481",
+      "pinnedStateRead": true,
+      "status": "read_only_network_probe",
+      "transactionQualified": false
+    },
+    {
+      "network": "BNB Smart Chain testnet",
+      "chainId": "97",
+      "endpoint": "https://bsc-testnet-dataseed.bnbchain.org",
+      "genesisHash": "0x6d3c66c5357ec91d5c43af47e234a939b22557cbb552dc45bebbceeed90fbe34",
+      "latestBlock": "139881131",
+      "pinnedStateRead": true,
+      "status": "read_only_network_probe",
+      "transactionQualified": false
+    }
+  ]
+}

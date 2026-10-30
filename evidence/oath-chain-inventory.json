@@ -270,7 +270,7 @@
       "evmChainIdFromOath": null,
       "transport": "generic capability/session protocol",
       "transactionAdapter": "wallet implementation required",
-      "testnetQualification": "Fixed 0.001 devnet SOL transfer confirmed through local relay in slot 516914340; finalized receipt/signature status checked; see solana-devnet.json and solana-devnet-finality.json. Deployed test and general-purpose adapter remain open."
+      "testnetQualification": "Fixed 0.001 SOL transfers confirmed on devnet through local relay (slot 516914340) and separately on testnet through deployed relay (slot 458656746). See solana-devnet.json and solana-testnet-live.json. These are distinct clusters; deployed devnet and broader signing methods remain open."
     },
     {
       "id": "somnia",
