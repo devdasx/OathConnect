@@ -1,0 +1,17 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "oathconnect-preview",
+  "main": "relay/src/worker.ts",
+  "compatibility_date": "2026-07-01",
+  "workers_dev": true,
+  "preview_urls": false,
+  "observability": {"enabled": false},
+  "vars": {"PUBLIC_ORIGIN": "https://oathconnect-preview.thuglifex.workers.dev", "RELEASE_SHA": "local", "MODE": "preview"},
+  "durable_objects": {"bindings": [{"name": "SESSIONS", "class_name": "RelaySession"}]},
+  "migrations": [{"tag": "v1", "new_sqlite_classes": ["RelaySession"]}],
+  "ratelimits": [
+    {"name": "IP_LIMIT", "namespace_id": "8101", "simple": {"limit": 120, "period": 60}},
+    {"name": "PROJECT_LIMIT", "namespace_id": "8102", "simple": {"limit": 600, "period": 60}}
+  ],
+  "limits": {"cpu_ms": 30}
+}
