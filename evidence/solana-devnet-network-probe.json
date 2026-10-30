@@ -1,0 +1,13 @@
+{
+  "checkedAt": "2026-10-30T21:00:34.991Z",
+  "commit": "5ab929f2e5c7d2e87c5d44b3a9146036687b489e",
+  "dirty": false,
+  "chain": "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1",
+  "genesisHash": "EtWTRABZaYq6iMfeYKouRu166VU2xqa1wcaWoxPkrZBG",
+  "contextSlot": 516902693,
+  "lastValidBlockHeight": 504079622,
+  "minimumRentForEmptyAccount": 650240,
+  "scope": "Read-only devnet network/fee-policy prerequisite probe; no funded wallet, approval, signing, simulation or submission",
+  "transactionConfirmed": false,
+  "productionReady": false
+}
