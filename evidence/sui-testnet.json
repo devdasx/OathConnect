@@ -23,5 +23,7 @@
     "https://sdk.mystenlabs.com/sui/transactions/signing-and-execution",
     "https://sdk.mystenlabs.com/sui/clients/grpc",
     "https://namespaces.chainagnostic.org/sui/caip2"
-  ]
+  ],
+  "harnessCommit": "cac66fd8c8247b6790783fc1f9b3848cf2fe52c5",
+  "subsequentChange": "Evidence recording changed to unique run receipts and atomic latest-file replacement; transaction execution was not rerun for this filesystem-only change."
 }

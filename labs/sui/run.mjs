@@ -1,5 +1,5 @@
 // Fixed testnet fixture only. Disposable signing keys stay in process memory.
-import {mkdirSync, readFileSync, writeFileSync, existsSync} from 'node:fs';
+import {readFileSync} from 'node:fs';
 import {createHash} from 'node:crypto';
 import {SuiGrpcClient} from '@mysten/sui/grpc';
 import {Ed25519Keypair} from '@mysten/sui/keypairs/ed25519';
@@ -9,6 +9,7 @@ import {normalizeSuiAddress, normalizeStructTag} from '@mysten/sui/utils';
 import {canonical, createIdentity, createPairing, digest, joinPairing} from '@oathconnect/protocol';
 import {Session, WalletAuthorizer} from '@oathconnect/sdk';
 import {validationRelay} from '../support/relay.mjs';
+import {writeEvidence} from '../support/evidence.mjs';
 
 const chain = 'sui:testnet', endpoint = 'https://fullnode.testnet.sui.io:443';
 // Pinned from the official Testnet endpoint; a reset requires explicit requalification.
@@ -27,15 +28,7 @@ async function network() {
   if ((await client.getChainIdentifier({signal:signal()})).chainIdentifier !== genesis) fail('network_mismatch');
 }
 function record(value) {
-  const output = 'evidence/sui-testnet.json';
-  mkdirSync('evidence', {recursive:true});
-  if (existsSync(output)) {
-    const path = 'evidence/sui-testnet-attempts.json';
-    const attempts = existsSync(path) ? JSON.parse(readFileSync(path)) : [];
-    attempts.push(JSON.parse(readFileSync(output)));
-    writeFileSync(path, JSON.stringify(attempts,null,2)+'\n');
-  }
-  writeFileSync(output, JSON.stringify(value,null,2)+'\n');
+  writeEvidence('sui-testnet',value);
   console.log(JSON.stringify(value));
 }
 try {
