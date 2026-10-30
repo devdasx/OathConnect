@@ -1,0 +1,23 @@
+{
+  "baselineCommit": "365f95714de3ed48e25359627595f4a212863fb1",
+  "scope": "Internal AI review of a fixed devnet fixture; not an independent human audit or evidence of exploitation",
+  "finding": "Post-signing simulation sent a valid signed transaction to the RPC provider before preserving its public signature. A provider could broadcast it; a subsequent simulation failure would leave no signature in evidence.",
+  "reproduction": {
+    "environment": "Mock RPC and ephemeral local signing only; no network transaction",
+    "validSignatureExposedBeforeFix": true,
+    "publicSignaturePreservedBeforeFix": false,
+    "sendTransactionCallsBeforeFix": 0,
+    "regressionBeforeFix": "failed with solana_simulation_failed"
+  },
+  "repair": "All simulations send zeroed signatures with sigVerify=false and replaceRecentBlockhash=false. Real signatures are verified locally, retained in memory, and first exposed only by the final send after public-signature evidence is written.",
+  "validation": {
+    "solanaHostTests": 14,
+    "failures": 0,
+    "independentCodecComparison": "Pinned Solana Foundation @solana/web3.js 3.1.1 generates matching bytes and verifies signatures",
+    "simulationContainsValidSignaturesAfterFix": false,
+    "singleSubmissionAndRetainedSignature": "passed",
+    "fundedLiveRun": "not completed"
+  },
+  "productionReady": false,
+  "oathWalletIntegrated": false
+}

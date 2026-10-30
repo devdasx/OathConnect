@@ -12,7 +12,7 @@ export class FixedSolanaAdapter {
   check(request.chain===CHAIN&&request.account===this.#plan.from&&request.method==='solana_signAndSendTransaction'&&canonical(request.params)===canonical({message:this.#plan.message}),'solana_test_policy_rejected');
  }
  confirmReceipt(receipt){check(this.#signed,'solana_no_signed_transaction');return verifyReceipt(receipt,this.#signed);}
- async #inspect(context,signed){
+ async #inspect(context){
   context.assertActive();const rpc=(method,params=[])=>this.rpc.request(method,params,context.signal);
   check(await rpc('getGenesisHash')===GENESIS,'solana_network_mismatch');context.assertActive();
   const cfg={commitment:'confirmed',minContextSlot:this.minimumSlot};
@@ -26,8 +26,10 @@ export class FixedSolanaAdapter {
   check(safeNumber(valid?.context?.slot)>=BigInt(this.minimumSlot)&&valid.value===true,'solana_blockhash_expired');
   check(safeNumber(fee?.context?.slot)>=BigInt(this.minimumSlot)&&safeNumber(fee.value)<=MAX_FEE,'solana_fee_rejected');
   check(safeNumber(rent)<=AMOUNT,'solana_recipient_rent_policy');
-  const wire=signed?.wire??Buffer.concat([Buffer.from([1]),Buffer.alloc(64),decode64(this.#plan.message,150)]).toString('base64');
-  const sim=await rpc('simulateTransaction',[wire,{encoding:'base64',commitment:'confirmed',minContextSlot:Math.max(slot,this.minimumSlot),sigVerify:!!signed,replaceRecentBlockhash:false}]);
+  // A provider can broadcast any valid signature it receives, even via simulation.
+  // Keep all simulation signatures zero; verification is performed locally.
+  const wire=Buffer.concat([Buffer.from([1]),Buffer.alloc(64),decode64(this.#plan.message,150)]).toString('base64');
+  const sim=await rpc('simulateTransaction',[wire,{encoding:'base64',commitment:'confirmed',minContextSlot:Math.max(slot,this.minimumSlot),sigVerify:false,replaceRecentBlockhash:false}]);
   context.assertActive();check(safeNumber(sim?.context?.slot)>=BigInt(Math.max(slot,this.minimumSlot))&&sim.value?.err===null,'solana_simulation_failed');
   check(await rpc('getGenesisHash')===GENESIS,'solana_network_mismatch');context.assertActive();
  }
@@ -44,7 +46,7 @@ export class FixedSolanaAdapter {
    await this.#inspect(context);context.assertActive();this.#attempted=true;
    let signature;try{signature=await this.sign(this.#plan.message,context);}catch{throw new ProtocolError('solana_signing_failed');}
    context.assertActive();const signed=verifiedWire(this.#plan.message,signature);
-   await this.#inspect(context,signed);context.assertActive();this.#signed=signed;
+   await this.#inspect(context);context.assertActive();this.#signed=signed;
    // Preserve only the public signature before any submission; fail closed if evidence cannot be written.
    await this.beforeSubmit(signed.signature);context.assertActive();
    try{

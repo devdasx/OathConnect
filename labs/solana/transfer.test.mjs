@@ -49,10 +49,10 @@ function adapterFixture({send='ok',onSign,override}={}){
  const cap={chain:CHAIN,account:f.plan.from,methods:['solana_signAndSendTransaction']},request=newRequest(cap,cap.methods[0],{message:f.message});
  return{...f,adapter,cap,request,context,controller,calls,state};
 }
-test('one exact approval/signature/submission checks state, signed simulation and retained signature',async()=>{
+test('one exact approval/signature/submission checks state, unsigned simulation and retained signature',async()=>{
  const f=adapterFixture();let approvals=0;
  const authorizer=new WalletAuthorizer([f.cap],new Map([[CHAIN+'/'+f.cap.methods[0],f.adapter]]),async(request,review)=>{approvals++;assert.equal(canonical(request.params),canonical({message:f.message}));return{approved:true,requestDigest:review.requestDigest};});
- try{const result=await authorizer.handle(f.request);assert.equal(result.status,'submitted');assert.deepEqual(Object.keys(result).sort(),['signature','status']);assert.equal(f.adapter.confirmReceipt(f.receipt).feeLamports,'5000');assert.equal(approvals,1);assert.equal(f.state.signs,1);assert.equal(f.state.sends,1);assert.deepEqual(f.calls.filter(c=>c[0]==='simulateTransaction').map(c=>c[1][1].sigVerify),[false,false,true]);await assert.rejects(()=>authorizer.handle(f.request));}finally{authorizer.close();}
+ try{const result=await authorizer.handle(f.request);assert.equal(result.status,'submitted');assert.deepEqual(Object.keys(result).sort(),['signature','status']);assert.equal(f.adapter.confirmReceipt(f.receipt).feeLamports,'5000');assert.equal(approvals,1);assert.equal(f.state.signs,1);assert.equal(f.state.sends,1);assert.deepEqual(f.calls.filter(c=>c[0]==='simulateTransaction').map(c=>c[1][1].sigVerify),[false,false,false]);await assert.rejects(()=>authorizer.handle(f.request));}finally{authorizer.close();}
 });
 test('ambiguous submission retains signature and never retries or signs a replacement',async()=>{
  for(const send of ['throw','wrong']){const f=adapterFixture({send});await f.adapter.review(f.request,f.context);const result=await f.adapter.execute(f.request,f.context);assert.equal(result.status,'broadcast_unknown');assert.equal(result.signature,f.signed.signature);await assert.rejects(()=>f.adapter.execute(f.request,f.context));assert.equal(f.state.signs,1);assert.equal(f.state.sends,1);}
@@ -63,4 +63,12 @@ test('cancellation during asynchronous signing prevents later dispatch',async()=
 test('wrong network, expired blockhash, unsafe fee and simulation failure never reach signing',async()=>{
  const cases=[['getGenesisHash','mainnet'],['isBlockhashValid',{context:{slot:100},value:false}],['getFeeForMessage',{context:{slot:100},value:10001}],['getMinimumBalanceForRentExemption',1000001],['simulateTransaction',{context:{slot:100},value:{err:{InstructionError:[0,1]}}}]];
  for(const [method,result] of cases){const f=adapterFixture({override:m=>m===method?result:undefined});await assert.rejects(()=>f.adapter.review(f.request,f.context));assert.equal(f.state.signs,0);assert.equal(f.state.sends,0);}
+});
+test('simulation never exposes a valid signed transaction, including after local signing',async()=>{
+ let exposed=false;const f=adapterFixture({override:(method,params)=>{
+  if(method==='simulateTransaction'){
+   const wire=decode64(params[0],215);if(wire.subarray(1,65).some(byte=>byte!==0)){exposed=true;return{context:{slot:100},value:{err:{InstructionError:[0,1]}}};}
+  }
+ }});
+ await f.adapter.review(f.request,f.context);const result=await f.adapter.execute(f.request,f.context);assert.equal(result.status,'submitted');assert.equal(exposed,false);assert.equal(f.state.signs,1);assert.equal(f.state.sends,1);
 });

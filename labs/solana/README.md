@@ -18,7 +18,10 @@ The fixture pins devnet genesis and checks account ownership/data, recipient
 absence, rent requirements, fee cap, blockhash validity and simulation before
 approval, before signing and after signing. Exact decoded bytes are approved;
 Node's Ed25519 implementation signs, and signature verification independently
-checks the sender. The signed simulation never replaces the blockhash. The
+checks the sender. Every simulation uses zeroed signatures and never replaces the blockhash.
+Valid signed bytes are sent only at the final submission, after recording the
+public signature. A provider receiving signed bytes could broadcast them,
+regardless of the RPC method name. The
 submission has `maxRetries: 0`; there is no automatic replacement or rebroadcast.
 The public signature is recorded before the sole submission so an interrupted
 or ambiguous result can be reconciled without sending again. Signed bytes and
