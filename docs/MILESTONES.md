@@ -25,7 +25,7 @@ Unfinished milestones must not be labeled complete to justify a version tag.
 
 Restricted EVM transaction validation and verified signing are implemented, with
 cooperative execution contexts in both SDKs. Local validation passed 46 TypeScript
-tests, 15 native SDK host tests, one native fixture host test, three JavaScript
+tests, 16 native SDK host tests, one native fixture host test, three JavaScript
 fixture tests and generic iOS compilation. A funded Sepolia attempt reached one
 approval, signature and submission attempt, but has no confirmed receipt. Its
 hash and read-only reconciliation are public; no automatic retry was performed.

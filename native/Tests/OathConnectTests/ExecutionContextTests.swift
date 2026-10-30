@@ -28,7 +28,45 @@ private actor PendingAdapter: WalletAdapter {
         broadcasts += 1; return .bool(true)
     }
 }
+private actor DetachedAdapter: WalletAdapter {
+    let gate: ExecutionGate
+    private(set) var broadcasts = 0
+    init(gate: ExecutionGate) {self.gate = gate}
+    func review(_ request: SigningRequest, context: ExecutionContext) async throws -> TransactionReview {
+        try await context.checkActive()
+        return .init(requestDigest: request.digest, summary: "Detached signing fixture", warnings: [])
+    }
+    private func recordBroadcast() {broadcasts += 1}
+    func execute(_ request: SigningRequest, context: ExecutionContext) async throws -> JSONValue {
+        // A detached signing engine does not inherit cancellation of handle().
+        try await Task.detached { [gate] in
+            await gate.pause()
+            try await context.checkActive()
+            await self.recordBroadcast()
+            return JSONValue.bool(true)
+        }.value
+    }
+}
 final class ExecutionContextTests: XCTestCase, @unchecked Sendable {
+    func testOwningRequestCancellationReachesDetachedExecutionContext() async throws {
+        for action in ["cancel", "close", "complete"] {
+            let gate = ExecutionGate(), adapter = DetachedAdapter(gate: gate)
+            let cap = try Capability(chain: "eip155:11155111", account: "test-account", methods: ["test_sign"])
+            let authorizer = try WalletAuthorizer(capabilities: [cap], adapters: [cap.chain + "/test_sign": adapter]) {_, review, context in
+                try await context.checkActive(); return .init(approved: true, requestDigest: review.requestDigest)
+            }
+            let data = try json(["type": "request", "id": encode64(Data(repeating: 10, count: 16)), "chain": cap.chain, "account": cap.account, "method": "test_sign", "params": [:], "expires": timestamp() + 120])
+            let task = Task {try await authorizer.handle(data)}
+            await gate.waitUntilEntered()
+            if action == "cancel" {task.cancel()}
+            if action == "close" {await authorizer.close()}
+            await gate.release()
+            if action == "complete" {let result = try await task.value; XCTAssertEqual(result, .bool(true))}
+            else {do {_ = try await task.value; XCTFail("Inactive detached execution broadcast")} catch {}}
+            let broadcasts = await adapter.broadcasts
+            XCTAssertEqual(broadcasts, action == "complete" ? 1 : 0, action)
+        }
+    }
     func testClosureCancellationAndDeadlineDuringExecutionPreventBroadcast() async throws {
         for action in ["close", "cancel", "expire", "complete"] {
             let gate = ExecutionGate(), adapter = PendingAdapter(gate: gate)

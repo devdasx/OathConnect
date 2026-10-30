@@ -110,6 +110,14 @@ public struct ExecutionContext: Sendable {
         try Task.checkCancellation(); try await validate(); try Task.checkCancellation()
     }
 }
+/// Cancellation handlers cannot await the authorizer actor. Protect this tiny
+/// request-owned flag synchronously so detached adapters observe cancellation.
+private final class ExecutionLifetime: @unchecked Sendable {
+    private let lock = NSLock()
+    private var active = true
+    func invalidate() {lock.withLock {active = false}}
+    func checkActive() throws {try lock.withLock {try check(active, .invalidState)}}
+}
 public protocol WalletAdapter: Sendable {
     func review(_ request: SigningRequest, context: ExecutionContext) async throws -> TransactionReview
     func execute(_ request: SigningRequest, context: ExecutionContext) async throws -> JSONValue
@@ -137,22 +145,29 @@ public actor WalletAuthorizer {
         try check(timestamp() < deadline, .expired)
         try check(seen.count < 1024 && !seen.contains(request.id), .replayOrGap)
         seen.insert(request.id); busy = true
-        let id = UUID(); executionID = id
-        defer {busy = false; executionID = nil}
+        let id = UUID(), lifetime = ExecutionLifetime(); executionID = id
+        defer {lifetime.invalidate(); busy = false; executionID = nil}
         let context = ExecutionContext(deadline: deadline) {[weak self] in
+            try lifetime.checkActive()
             guard let self else {throw OathConnectError.invalidState}
             try await self.checkExecution(id, deadline: deadline)
+            try lifetime.checkActive()
         }
-        guard let adapter = adapters[request.chain + "/" + request.method] else {throw OathConnectError.invalidState}
-        let review = try await adapter.review(request, context: context)
-        try Task.checkCancellation()
-        try check(review.requestDigest == request.digest && !review.summary.isEmpty && review.summary.count <= 4000 && review.warnings.count <= 20 && review.warnings.allSatisfy {$0.count <= 500})
-        try check(!closed && timestamp() < deadline, .expired)
-        let approval = try await approve(request, review, context)
-        try Task.checkCancellation()
-        try check(!closed && timestamp() < deadline, .expired)
-        try check(approval.approved && approval.requestDigest == request.digest, .invalidState)
-        let result = try await adapter.execute(request, context: context)
-        try check(result.canonical().count <= 22_000, .tooLarge); return result
+        return try await withTaskCancellationHandler {
+            try await context.checkActive()
+            guard let adapter = adapters[request.chain + "/" + request.method] else {throw OathConnectError.invalidState}
+            let review = try await adapter.review(request, context: context)
+            try Task.checkCancellation()
+            try check(review.requestDigest == request.digest && !review.summary.isEmpty && review.summary.count <= 4000 && review.warnings.count <= 20 && review.warnings.allSatisfy {$0.count <= 500})
+            try check(!closed && timestamp() < deadline, .expired)
+            let approval = try await approve(request, review, context)
+            try Task.checkCancellation()
+            try check(!closed && timestamp() < deadline, .expired)
+            try check(approval.approved && approval.requestDigest == request.digest, .invalidState)
+            let result = try await adapter.execute(request, context: context)
+            try check(result.canonical().count <= 22_000, .tooLarge); return result
+        } onCancel: {
+            lifetime.invalidate()
+        }
     }
 }
