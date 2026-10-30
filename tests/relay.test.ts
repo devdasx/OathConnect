@@ -89,6 +89,25 @@ test('global integrator allocation budget stops the 101st session', async () => 
   } finally {await f.mf.dispose();}
 });
 
+test('capacity-rejected allocations consume the global request budget atomically',async()=>{
+  const f=await fixture();
+  try {
+    const namespace=await f.mf.getDurableObjectNamespace('PROJECTS');
+    const stub=namespace.get(namespace.idFromName('quota-regression'));
+    const session=random();
+    const request=async(target:typeof stub,id:string,create:boolean)=>{
+      const r=await target.fetch('https://internal/',{method:'POST',body:JSON.stringify({session:id,create})});
+      await r.arrayBuffer();return r.status;
+    };
+    for(let n=0;n<100;n++)assert.equal(await request(stub,n===0?session:random(),true),200);
+    const denied=await Promise.all(Array.from({length:500},()=>request(stub,random(),true)));
+    assert.ok(denied.every(status=>status===429));
+    assert.equal(await request(stub,session,false),429,'Capacity failures must count toward the 600-request limit');
+    const independent=namespace.get(namespace.idFromName('independent-project'));
+    assert.equal(await request(independent,random(),true),200,'Another integrator keeps its own budget');
+  }finally{await f.mf.dispose();}
+});
+
 test('relay restart preserves encrypted mailboxes, replay protection and closure tombstones', async () => {
   const {mkdtemp, rm} = await import('node:fs/promises'); const {tmpdir} = await import('node:os'); const {join} = await import('node:path');
   const directory = await mkdtemp(join(tmpdir(), 'oathconnect-restart-')); const f = await fixture({persist: directory});
