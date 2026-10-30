@@ -1,0 +1,15 @@
+{
+  "checked": "2026-10-30T18:54:34.211Z",
+  "network": "Ethereum Sepolia",
+  "chain": "eip155:11155111",
+  "source": "https://openfaucet.org/ethereum-sepolia",
+  "fundingHash": "0x0924177c73824fc2aaf0c24f87c9aedffc7c88a4a3930740e8826d0132115607",
+  "recipient": "0x9F8Cd543EF510D3E801cB6AA0Af900823791F26C",
+  "amountFromFaucetUI": "0.01 ETH",
+  "block": "12028582",
+  "receiptStatus": "0x1",
+  "scope": "Free disposable-account funding only; not OathConnect transaction confirmation",
+  "mainnetFundsUsed": false,
+  "miningStopped": true,
+  "productionReady": false
+}

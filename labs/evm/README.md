@@ -63,5 +63,17 @@ through the local relay. See `evidence/evm-sepolia.json` and the separately
 dated cross-provider confirmation. Earlier failed and uncertain attempts remain
 in the archives. This proves only the fixture's restricted native-transfer path.
 
+A separate fresh account completed the same restricted native transfer through
+the deployed relay in Sepolia block 12028584. See `evidence/evm-sepolia-live.json`.
+Its one-hour disposable approval is disabled after validation through GitHub.
+
+Run `node labs/evm/reconcile.mjs local` or `node labs/evm/reconcile.mjs live`
+to repeat read-only receipt, canonical-block and finalized-height checks using
+both published providers. Results are archived under `evidence/*-finality-runs`
+and separately identify provider-reported finality. This command has no signing
+or transaction-submission code. It uses the bounded RPC transport and rejects
+network, receipt and canonical-block mismatches. Provider agreement is not an
+independently verified consensus proof.
+
 This does not qualify ERC-20 contracts, other EVM networks, THORChain swaps,
 Oath Wallet, or production use.

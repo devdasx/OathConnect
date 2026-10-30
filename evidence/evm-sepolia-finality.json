@@ -1,0 +1,35 @@
+{
+  "checked": "2026-10-30T18:58:23.093Z",
+  "hash": "0x1d118f255f9aefc0431ba8b15956066b43e0371b88da31c99c4d494db5dbcc85",
+  "scope": "Read-only cross-provider receipt/canonical-block and finalized-height checks; RPC assertions, not an independently verified consensus proof",
+  "readings": [
+    {
+      "endpoint": "https://gateway.tenderly.co/public/sepolia",
+      "status": "0x1",
+      "hash": "0x1d118f255f9aefc0431ba8b15956066b43e0371b88da31c99c4d494db5dbcc85",
+      "block": "12028472",
+      "canonicalBlockHash": "0x9ef1413a61f201302a1eeb3628b51fd6cf4e62920e1eab1be5b00ae866fe2b11",
+      "finalizedHeight": "12028526",
+      "finalizedBlockHash": "0xf42563c95134af7f4704172c091f2883feefe29ea97e44d1426ca9eaf5d5f69c",
+      "finalizedCanonicalBlockHash": "0xf42563c95134af7f4704172c091f2883feefe29ea97e44d1426ca9eaf5d5f69c",
+      "withinReportedFinalizedHeight": true
+    },
+    {
+      "endpoint": "https://ethereum-sepolia-rpc.publicnode.com",
+      "status": "0x1",
+      "hash": "0x1d118f255f9aefc0431ba8b15956066b43e0371b88da31c99c4d494db5dbcc85",
+      "block": "12028472",
+      "canonicalBlockHash": "0x9ef1413a61f201302a1eeb3628b51fd6cf4e62920e1eab1be5b00ae866fe2b11",
+      "finalizedHeight": "12028526",
+      "finalizedBlockHash": "0xf42563c95134af7f4704172c091f2883feefe29ea97e44d1426ca9eaf5d5f69c",
+      "finalizedCanonicalBlockHash": "0xf42563c95134af7f4704172c091f2883feefe29ea97e44d1426ca9eaf5d5f69c",
+      "withinReportedFinalizedHeight": true
+    }
+  ],
+  "transactionConfirmed": true,
+  "finalizedByBothProviders": true,
+  "productionReady": false,
+  "receiptCommit": "ac7571e832f1ef4376d4c82c006b5052a837cb52",
+  "reconcilerCommit": "63298815492236abc9c6a02bff7c68dcbba5ad2b",
+  "reconcilerDirty": false
+}

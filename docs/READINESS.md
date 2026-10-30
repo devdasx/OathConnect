@@ -57,8 +57,17 @@ one PublicNode submission, confirmed in block 12028472. The fixture checked the
 expected native-transfer log, 21,000 gas and one-wei recipient balance increase.
 See the [receipt](../evidence/evm-sepolia.json) and
 [cross-provider confirmation](../evidence/evm-sepolia-confirmation.json).
-This is canonical inclusion, not yet a verified finalized checkpoint. Deployed
-relay EVM testing, ERC-20 qualification, broader operations and other networks
+A fresh account also completed the same one-wei transfer through the deployed
+relay at commit `8c06a27cf1167993428b0728237260ac53aab0fc`, confirmed in block
+12028584. It again used one approval, one signature and one submission, with
+the expected receipt, log and recipient balance change. See the
+[live receipt](../evidence/evm-sepolia-live.json). This is a restricted native
+transfer test, not ERC-20 or THORChain swap qualification.
+
+`node labs/evm/reconcile.mjs local` (or `live`) checks the stored receipt with
+two providers and writes separate dated finality evidence. Canonical inclusion
+and provider-reported finalized height are distinct; neither proves consensus
+independently. ERC-20 qualification, broader operations and other networks
 remain open.
 
 TypeScript and Swift adapter/approval callbacks receive a request execution

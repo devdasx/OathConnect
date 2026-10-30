@@ -135,7 +135,7 @@
       "evmChainIdFromOath": 1,
       "transport": "generic capability/session protocol",
       "transactionAdapter": "Restricted @oathconnect/evm preview available; this network and its fee model are not qualified",
-      "testnetQualification": "Restricted reusable EVM adapter completed one Sepolia native transfer through the local relay; see evm-sepolia.json and evm-sepolia-confirmation.json. Deployed relay, token calls, other operations and Ethereum mainnet qualification remain open."
+      "testnetQualification": "Restricted reusable EVM adapter completed one Sepolia native transfer through each of the local and deployed relays; see evm-sepolia.json and evm-sepolia-live.json. Token calls, other operations and Ethereum mainnet qualification remain open."
     },
     {
       "id": "fantom",
