@@ -1,0 +1,9 @@
+{
+  "name": "oathconnect-sui-testnet-lab",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "dependencies": {
+    "@mysten/sui": "2.38.0"
+  }
+}

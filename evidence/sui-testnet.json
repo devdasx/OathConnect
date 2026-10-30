@@ -1,0 +1,29 @@
+{
+  "started": "2026-10-30T15:44:13.866Z",
+  "completed": "2026-10-30T15:45:25.873Z",
+  "network": "Sui Testnet",
+  "chain": "sui:testnet",
+  "genesis": "69WiPg3DAQiwdxfncX6wYQ2siKwAe6L9BZthQea3JNMD",
+  "transport": "local Cloudflare workerd runtime; not a deployed relay test",
+  "status": "confirmed",
+  "transactionConfirmed": true,
+  "checkpoint": "400942229",
+  "hash": "DvCJRTKLSvmpUcMaauw28PG3Ewr6mn3zkptMSEyNRoGa",
+  "decisions": 1,
+  "executions": 1,
+  "faucetDigest": "82ccWanx7n5WfsbZZhLzUiq4B42TQVLQ3r3H9AoSbTE5",
+  "faucetAmountMist": "1000000000",
+  "operation": "One MIST address-balance transfer; gas budget capped at 10000000 MIST",
+  "thorchainSwap": false,
+  "harnessSHA256": "36abe1bc2ff35cc18b6f85abb87b2a7c62bfa54b9c4e82e2de44318bb92d7f12",
+  "sdkVersion": "@mysten/sui@2.38.0",
+  "protocolSourceCommit": "205073f52306f47aad16492e34d423c7c801c03c",
+  "sources": [
+    "https://sdk.mystenlabs.com/sui",
+    "https://sdk.mystenlabs.com/sui/transactions/signing-and-execution",
+    "https://sdk.mystenlabs.com/sui/clients/grpc",
+    "https://namespaces.chainagnostic.org/sui/caip2"
+  ],
+  "harnessCommit": "cac66fd8c8247b6790783fc1f9b3848cf2fe52c5",
+  "subsequentChange": "Evidence recording changed to unique run receipts and atomic latest-file replacement; transaction execution was not rerun for this filesystem-only change."
+}

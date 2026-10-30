@@ -21,7 +21,9 @@ jobs:
           node-version: '24'
       - run: npm ci --ignore-scripts --prefix labs/xrpl && npm audit --audit-level=low --prefix labs/xrpl
       - run: npm ci --ignore-scripts --prefix labs/stellar && npm audit --audit-level=low --prefix labs/stellar
-      - run: node --check labs/xrpl/run.mjs && node --check labs/stellar/run.mjs && node --check labs/solana/run.mjs
+      - run: npm ci --ignore-scripts --prefix labs/sui && npm audit --audit-level=low --prefix labs/sui
+      - run: node --check labs/xrpl/run.mjs && node --check labs/stellar/run.mjs && node --check labs/solana/run.mjs && node --check labs/sui/run.mjs
+      - run: node --test labs/support/evidence.test.mjs
   security:
     name: Security analysis
     runs-on: ubuntu-24.04
