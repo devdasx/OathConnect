@@ -17,7 +17,7 @@ const started=new Date().toISOString(), commit=execFileSync('git',['rev-parse','
 const dirty=execFileSync('git',['status','--porcelain'],{encoding:'utf8'}).trim().length>0;
 const evidenceName=process.env.OATHCONNECT_LIVE_VALIDATION==='true'?'evm-sepolia-live':'evm-sepolia';
 let stage='network', relay, dapp, wallet, authorizer, fundingDirectory, transactionHash;
-let decisions=0, executions=0, broadcasts=0;
+let decisions=0, executions=0, broadcasts=0, adapterFailure;
 const bounded=()=>AbortSignal.timeout(15000);
 const check=(condition,code)=>{if(!condition)throw new ProtocolError(code);};
 async function identity(){
@@ -25,8 +25,12 @@ async function identity(){
   check(id==='0xaa36a7'&&first?.hash===genesis&&first?.number==='0x0','evm_lab_network_mismatch');
 }
 try {
-  await identity(); const sender=Wallet.createRandom(), recipient=Wallet.createRandom().address;
-  const policy={chainId:'11155111',genesisHash:genesis,account:sender.address,nativeSymbol:'ETH',feeModel:'execution-gas-only',maximumGas:'21000',maximumFeePerGas:'1000000000',maximumExecutionFee:'21000000000000',maximumValue:'1',maximumBlockAge:120,tokens:[]};
+  await identity(); const sender=Wallet.createRandom();
+  // Public disposable recipient funded in the first qualification attempt. Its
+  // key was discarded; it is not an existing user wallet. EIP-8037 account
+  // creation is outside this adapter's 21,000-gas native-transfer policy.
+  const recipient='0x1c45C88FC99aCF04385A5AB2e6e250afF6A8F92c';
+  const policy={chainId:'11155111',genesisHash:genesis,account:sender.address,nativeSymbol:'ETH',feeModel:'gas-limit-times-price',maximumGas:'21000',maximumFeePerGas:'1000000000',maximumGasFee:'21000000000000',maximumValue:'1',maximumBlockAge:120,tokens:[]};
   stage='free_testnet_funding';
   fundingDirectory=mkdtempSync(join(tmpdir(),'oathconnect-sepolia-'));
   writeFileSync(join(fundingDirectory,'funding.json'),JSON.stringify({network:'Sepolia',chain,address:sender.address,expires:Date.now()+1200000})+'\n',{mode:0o600,flag:'wx'});
@@ -51,7 +55,9 @@ try {
   const before=BigInt(await rpc.request('eth_getBalance',[recipient,'latest'],bounded()));
   const params=[{type:'0x2',chainId:'0xaa36a7',from:sender.address,to:recipient,nonce,gas:'0x5208',value:'0x1',data:'0x',maxFeePerGas:toQuantity(1000000000n),maxPriorityFeePerGas:toQuantity(100000000n)}];
   const adapter=new EvmAdapter(policy,{
-    inspect:(plan,signal)=>rpc.inspect(plan,signal),
+    async inspect(plan,signal){
+      try{return await rpc.inspect(plan,signal);}catch(error){adapterFailure=error instanceof ProtocolError?error.code:'unclassified';throw error;}
+    },
     async sign(unsigned,context){
       stage='sign';context.assertActive();check(++executions===1,'evm_lab_duplicate_sign');
       return sender.signTransaction(Transaction.from(unsigned));
@@ -76,7 +82,10 @@ try {
     receipt=await rpc.request('eth_getTransactionReceipt',[transactionHash],bounded());
     if(receipt)break;await delay(5000);
   }
-  check(receipt?.transactionHash===transactionHash&&receipt?.status==='0x1'&&receipt?.from?.toLowerCase()===sender.address.toLowerCase()&&receipt?.to?.toLowerCase()===recipient.toLowerCase()&&receipt?.gasUsed==='0x5208'&&receipt?.logs?.length===0,'evm_lab_receipt_unconfirmed');
+  check(receipt?.transactionHash===transactionHash&&receipt?.status==='0x1'&&receipt?.from?.toLowerCase()===sender.address.toLowerCase()&&receipt?.to?.toLowerCase()===recipient.toLowerCase()&&receipt?.gasUsed==='0x5208','evm_lab_receipt_unconfirmed');
+  // EIP-7708 emits a system Transfer log for native ETH after Glamsterdam.
+  const logs=receipt.logs, transferTopic='0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
+  check(Array.isArray(logs)&&logs.length===1&&logs[0].address==='0xfffffffffffffffffffffffffffffffffffffffe'&&canonical(logs[0].topics)===canonical([transferTopic,'0x'+sender.address.slice(2).toLowerCase().padStart(64,'0'),'0x'+recipient.slice(2).toLowerCase().padStart(64,'0')])&&logs[0].data==='0x'+'1'.padStart(64,'0'),'evm_lab_transfer_log_mismatch');
   const canonicalBlock=await rpc.request('eth_getBlockByNumber',[receipt.blockNumber,false],bounded());
   check(canonicalBlock?.hash===receipt.blockHash,'evm_lab_receipt_reorg');
   const after=BigInt(await rpc.request('eth_getBalance',[recipient,{blockHash:receipt.blockHash,requireCanonical:true}],bounded()));
@@ -85,7 +94,7 @@ try {
   writeEvidence(evidenceName,evidence);console.log(JSON.stringify(evidence));
 } catch(error) {
   const code=error instanceof ProtocolError&&/^[a-z0-9_]{1,100}$/.test(error.code)?error.code:'unclassified';
-  const evidence={started,completed:new Date().toISOString(),commit,dirty,network:'Ethereum Sepolia',chain,stage,status:'blocked_or_failed',code,transactionConfirmed:false,decisions,executions,broadcasts,...(transactionHash?{hash:transactionHash}:{}),productionReady:false};
+  const evidence={started,completed:new Date().toISOString(),commit,dirty,network:'Ethereum Sepolia',chain,stage,status:'blocked_or_failed',code,...(adapterFailure?{adapterFailure}:{}),transactionConfirmed:false,decisions,executions,broadcasts,...(transactionHash?{hash:transactionHash}:{}),productionReady:false};
   writeEvidence(evidenceName,evidence);console.log(JSON.stringify(evidence));process.exitCode=1;
 } finally {
   authorizer?.close();await dapp?.close().catch(()=>{});await wallet?.close().catch(()=>{});await relay?.dispose();

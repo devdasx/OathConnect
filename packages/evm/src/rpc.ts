@@ -67,16 +67,17 @@ export class EvmRpc {
     const call={from:plan.from,to:plan.to,nonce:toQuantity(tx.nonce),gas:toQuantity(tx.gasLimit),value:toQuantity(tx.value),data:tx.data,
       ...(tx.type===0?{gasPrice:toQuantity(tx.gasPrice!)}:{maxFeePerGas:toQuantity(tx.maxFeePerGas!),maxPriorityFeePerGas:toQuantity(tx.maxPriorityFeePerGas!)})};
     const readToken=(method:'balanceOf'|'allowance',args:string[])=>this.request('eth_call',[{from:plan.from,to:plan.to,data:tokenRead.encodeFunctionData(method,args)},at],signal).then(word);
-    const [balance,senderCode,destinationCode,simulation,tokenBalance,allowance]=await Promise.all([
+    const [balance,senderCode,destinationCode,destinationBalance,destinationNonce,simulation,tokenBalance,allowance]=await Promise.all([
       this.request('eth_getBalance',[plan.from,at],signal),this.request('eth_getCode',[plan.from,at],signal),
-      this.request('eth_getCode',[plan.to,at],signal),this.request('eth_call',[call,at],signal),
+      this.request('eth_getCode',[plan.to,at],signal),this.request('eth_getBalance',[plan.to,at],signal),
+      this.request('eth_getTransactionCount',[plan.to,at],signal),this.request('eth_call',[call,at],signal),
       plan.kind==='erc20-transfer'?readToken('balanceOf',[plan.from]):Promise.resolve(null),
       plan.kind==='erc20-approval'?readToken('allowance',[plan.from,plan.recipient]):Promise.resolve(null)
     ]);
     const [chainAgain,canonicalBlock]=await Promise.all([this.request('eth_chainId',[],signal),this.request('eth_getBlockByNumber',[latest.number,false],signal)]);
     const canonicalHead=block(canonicalBlock);
     requireThat(chainAgain===chain && canonicalHead.hash===latest.hash && canonicalHead.number===latest.number,'evm_rpc_state_changed');
-    return {chainId:quantity(chain),genesisHash:genesis.hash,blockHash:latest.hash,blockTimestamp:latest.timestamp,observedAt:nowSeconds(),pendingNonce:quantity(nonce),balance:quantity(balance),senderCode:bytes(senderCode,65536),destinationCode:bytes(destinationCode,65536),tokenBalance,allowance,simulationReturn:bytes(simulation,256)};
+    return {chainId:quantity(chain),genesisHash:genesis.hash,blockHash:latest.hash,blockTimestamp:latest.timestamp,observedAt:nowSeconds(),pendingNonce:quantity(nonce),balance:quantity(balance),senderCode:bytes(senderCode,65536),destinationCode:bytes(destinationCode,65536),destinationBalance:quantity(destinationBalance),destinationNonce:quantity(destinationNonce),tokenBalance,allowance,simulationReturn:bytes(simulation,256)};
   }
   async broadcast(signed: string, signal: AbortSignal): Promise<string> {
     bytes(signed,8192);

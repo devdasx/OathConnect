@@ -32,7 +32,7 @@ THORChain documentation retrieved 2026-10-30 describes stagenet endpoints as tra
 The 0.3 preview adds a restricted reusable EVM adapter for native transfers and
 wallet-allowlisted ERC-20 transfer/approval calls, with exact-byte signature
 verification, network/state checks, bounded fees and single-attempt submission.
-It requires wallet-qualified execution-only gas fees; rollups and other fee
+It requires wallet-qualified gas-limit-times-price fee bounds; rollups and other fee
 models remain unsupported. See [adapter scope and trust limits](../packages/evm/README.md).
 Host tests are not evidence of every EVM network or contract's behavior.
 
@@ -42,6 +42,6 @@ after asynchronous signing prevent subsequent broadcast. They cannot retract a
 submission already dispatched. Wallet lock enforcement and durable reconciliation
 of uncertain submissions remain integrator responsibilities.
 
-The current source passed 44 TypeScript tests, 15 native SDK host tests, one
+The current source passed 45 TypeScript tests, 15 native SDK host tests, one
 native fixture host test and generic iOS compilation. No simulator or physical
 device was used. This is internal validation, not an independent audit.

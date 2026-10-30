@@ -22,10 +22,10 @@ export interface EvmPolicy {
   readonly account: string;
   readonly nativeSymbol: string;
   /** Explicit wallet qualification; rollup/L1-data-fee networks need another adapter. */
-  readonly feeModel: 'execution-gas-only';
+  readonly feeModel: 'gas-limit-times-price';
   readonly maximumGas: string;
   readonly maximumFeePerGas: string;
-  readonly maximumExecutionFee: string;
+  readonly maximumGasFee: string;
   readonly maximumValue: string;
   readonly maximumBlockAge: number;
   readonly tokens: readonly TokenPolicy[];
@@ -37,7 +37,7 @@ export interface EvmPlan {
   readonly nonce: string;
   readonly gas: string;
   readonly value: string;
-  readonly maximumExecutionFee: string;
+  readonly maximumGasFee: string;
   readonly unsignedSerialized: string;
   readonly kind: 'native-transfer' | 'erc20-transfer' | 'erc20-approval';
   readonly recipient: string;
@@ -55,6 +55,8 @@ export interface EvmState {
   readonly balance: string;
   readonly senderCode: string;
   readonly destinationCode: string;
+  readonly destinationBalance: string;
+  readonly destinationNonce: string;
   readonly tokenBalance: string | null;
   readonly allowance: string | null;
   readonly simulationReturn: string;
@@ -92,12 +94,12 @@ function freeze<T>(value: T): T {
 }
 function policySnapshot(value: EvmPolicy): Readonly<EvmPolicy> {
   const policy = JSON.parse(canonical(value)) as EvmPolicy;
-  record(policy, ['chainId','genesisHash','account','nativeSymbol','feeModel','maximumGas','maximumFeePerGas','maximumExecutionFee','maximumValue','maximumBlockAge','tokens']);
-  requireThat(policy.feeModel === 'execution-gas-only', 'evm_unqualified_fee_model');
+  record(policy, ['chainId','genesisHash','account','nativeSymbol','feeModel','maximumGas','maximumFeePerGas','maximumGasFee','maximumValue','maximumBlockAge','tokens']);
+  requireThat(policy.feeModel === 'gas-limit-times-price', 'evm_unqualified_fee_model');
   requireThat(decimal(policy.chainId) > 0n && policy.chainId.length <= 32, 'evm_invalid_chain'); hash(policy.genesisHash); address(policy.account);
   requireThat(typeof policy.nativeSymbol === 'string' && /^[A-Z0-9]{1,12}$/.test(policy.nativeSymbol), 'evm_invalid_symbol');
   requireThat(decimal(policy.maximumGas) >= 21_000n && decimal(policy.maximumGas) <= 100_000_000n, 'evm_gas_policy');
-  requireThat(decimal(policy.maximumFeePerGas) > 0n && decimal(policy.maximumExecutionFee) > 0n, 'evm_fee_policy'); decimal(policy.maximumValue);
+  requireThat(decimal(policy.maximumFeePerGas) > 0n && decimal(policy.maximumGasFee) > 0n, 'evm_fee_policy'); decimal(policy.maximumValue);
   integer(policy.maximumBlockAge, 5, 3600);
   requireThat(Array.isArray(policy.tokens) && policy.tokens.length <= 128, 'evm_token_policy');
   const seen = new Set<string>();
@@ -128,13 +130,15 @@ export function decodeEvmTransaction(request: Readonly<SigningRequest>, supplied
   const data = raw.data;
   requireThat(gas >= 21_000n && gas <= decimal(policy.maximumGas) && value <= decimal(policy.maximumValue), 'evm_spending_limit');
   const fee = quantity(type === '0x0' ? raw.gasPrice : raw.maxFeePerGas);
-  requireThat(fee > 0n && fee <= decimal(policy.maximumFeePerGas) && fee * gas <= decimal(policy.maximumExecutionFee), 'evm_fee_limit');
+  requireThat(fee > 0n && fee <= decimal(policy.maximumFeePerGas) && fee * gas <= decimal(policy.maximumGasFee), 'evm_fee_limit');
   const tip = type === '0x2' ? quantity(raw.maxPriorityFeePerGas) : null;
   requireThat(tip === null || tip <= fee, 'evm_invalid_priority_fee');
   let kind: EvmPlan['kind'] = 'native-transfer', recipient = to, amount = value.toString(), token: TokenPolicy | null = null;
   if (data === '0x') {
-    // No execution gas is available if code/delegation appears after inspection.
-    requireThat(gas === 21_000n && BigInt(to) > 65_535n, 'evm_native_transfer_policy');
+    // Positive transfers to a different existing account consume all 21,000
+    // execution gas under both the legacy schedule and EIP-2780. Zero-value
+    // and self transfers leave execution gas under EIP-2780 and are excluded.
+    requireThat(gas === 21_000n && value > 0n && from !== to && BigInt(to) > 65_535n, 'evm_native_transfer_policy');
   } else {
     token = policy.tokens.find(t => address(t.address) === to) ?? null;
     requireThat(token && value === 0n, 'evm_unapproved_contract');
@@ -151,7 +155,7 @@ export function decodeEvmTransaction(request: Readonly<SigningRequest>, supplied
   }
   const transaction = Transaction.from({type: type === '0x0' ? 0 : 2, chainId, nonce: Number(nonce), to, gasLimit: gas, value, data,
     ...(type === '0x0' ? {gasPrice: fee} : {maxFeePerGas: fee, maxPriorityFeePerGas: tip!, accessList: []})});
-  return freeze({chainId: policy.chainId, from, to, nonce: nonce.toString(), gas: gas.toString(), value: value.toString(), maximumExecutionFee: (fee * gas).toString(), unsignedSerialized: transaction.unsignedSerialized, kind, recipient, amount, token});
+  return freeze({chainId: policy.chainId, from, to, nonce: nonce.toString(), gas: gas.toString(), value: value.toString(), maximumGasFee: (fee * gas).toString(), unsignedSerialized: transaction.unsignedSerialized, kind, recipient, amount, token});
 }
 
 /** Recover the signer and compare every unsigned field before a signed payload may leave the wallet. */
@@ -165,17 +169,21 @@ export function verifyEvmSignature(plan: Readonly<EvmPlan>, signed: unknown): {h
 }
 
 function inspectState(plan: Readonly<EvmPlan>, state: EvmState, policy: EvmPolicy): void {
-  record(state, ['chainId','genesisHash','blockHash','blockTimestamp','observedAt','pendingNonce','balance','senderCode','destinationCode','tokenBalance','allowance','simulationReturn']);
+  record(state, ['chainId','genesisHash','blockHash','blockTimestamp','observedAt','pendingNonce','balance','senderCode','destinationCode','destinationBalance','destinationNonce','tokenBalance','allowance','simulationReturn']);
   const now = nowSeconds();
   requireThat(state.chainId === plan.chainId && state.genesisHash === policy.genesisHash, 'evm_wrong_network'); hash(state.blockHash);
   integer(state.observedAt, now - 15, now + 5); integer(state.blockTimestamp, now - policy.maximumBlockAge, now + 5);
   requireThat(decimal(state.pendingNonce).toString() === plan.nonce, 'evm_nonce_changed');
-  requireThat(decimal(state.balance) >= BigInt(plan.value) + BigInt(plan.maximumExecutionFee), 'evm_insufficient_balance');
+  requireThat(decimal(state.balance) >= BigInt(plan.value) + BigInt(plan.maximumGasFee), 'evm_insufficient_balance');
   hex(state.senderCode, 65536); hex(state.destinationCode, 65536); hex(state.simulationReturn, 256);
   // EIP-7702 delegated accounts and contract recipients require a separate reviewed adapter.
   requireThat(state.senderCode === '0x', 'evm_delegated_sender');
+  const destinationBalance=decimal(state.destinationBalance),destinationNonce=decimal(state.destinationNonce);
   if (plan.kind === 'native-transfer') {
     requireThat(state.destinationCode === '0x' && state.simulationReturn === '0x', 'evm_contract_destination');
+    // Account creation has additional state-gas charges under EIP-8037. It needs
+    // separate qualification; never raise gas automatically to make it succeed.
+    requireThat(destinationBalance > 0n || destinationNonce > 0n, 'evm_native_account_creation_unsupported');
   } else {
     requireThat(plan.token && state.destinationCode !== '0x' && keccak256(state.destinationCode) === plan.token.codeHash, 'evm_token_code_changed');
     requireThat(state.simulationReturn === trueWord, 'evm_token_simulation_failed');
@@ -201,14 +209,14 @@ export class EvmAdapter implements WalletAdapter {
     requireThat(!this.#busy && this.#reviewed.size < 64 && !this.#attemptedNonces.has(plan.nonce), 'evm_repair_required');
     requireThat(nowSeconds() < request.expires, 'evm_request_expired');
     this.#reviewed.set(requestDigest, {plan, expires: request.expires});
-    const fee = formatUnits(plan.maximumExecutionFee, 18) + ' ' + this.#policy.nativeSymbol;
+    const fee = formatUnits(plan.maximumGasFee, 18) + ' ' + this.#policy.nativeSymbol;
     const effect = plan.kind === 'native-transfer'
       ? `Send ${formatUnits(plan.value,18)} ${this.#policy.nativeSymbol} to ${plan.to}.`
       : plan.kind === 'erc20-transfer'
         ? `Request transfer of ${formatUnits(plan.amount,plan.token!.decimals)} ${plan.token!.symbol} to ${plan.recipient}. Token contract: ${plan.to}.`
         : `Set ${plan.token!.symbol} spending allowance for ${plan.recipient} to ${formatUnits(plan.amount,plan.token!.decimals)} (${plan.amount} base units). Token contract: ${plan.to}.`;
-    return {requestDigest, summary: `${effect} Chain ID ${plan.chainId}; sender ${plan.from}; nonce ${plan.nonce}; maximum execution gas fee ${fee}.`,
-      warnings: ['This adapter requires a wallet-qualified execution-gas-only network; rollup data fees and other network-specific charges are unsupported.',
+    return {requestDigest, summary: `${effect} Chain ID ${plan.chainId}; sender ${plan.from}; nonce ${plan.nonce}; maximum gas fee ${fee}.`,
+      warnings: ['This adapter requires a wallet-qualified network whose fees are bounded by gas limit times price; rollup data fees and other network-specific charges are unsupported.',
         ...(plan.token ? ['Contract behavior depends on its implementation and state. A bytecode pin and successful simulation do not certify a token or proxy.'] : []),
         ...(plan.kind === 'erc20-approval' ? ['The spender can later transfer tokens up to this allowance without another OathConnect request.'] : [])]};
   }

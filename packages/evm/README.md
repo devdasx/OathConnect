@@ -8,7 +8,9 @@ audit, and is not approved for real funds. It does not integrate Oath Wallet.
 
 - Fully populated `eth_sendTransaction`: replay-protected legacy (type 0) and
   EIP-1559 (type 2), with exact chain, sender, recipient, nonce, gas and fees.
-- Native transfers with empty calldata and exactly 21,000 gas. Both sender and
+- Positive native transfers to a different, already existing account, with empty
+  calldata and exactly 21,000 gas. New-account, zero-value and self transfers
+  are excluded. Both sender and
   destination must have no code; reserved low addresses are rejected.
 - Canonical ERC-20 `transfer` and `approve` calls to wallet-allowlisted bytecode.
   Approval amounts are capped by wallet policy, and a nonzero allowance must be
@@ -34,7 +36,10 @@ The adapter recovers the signing address and compares every unsigned field
 before broadcasting. It rechecks network state before and after signing.
 
 The wallet must qualify each network's fee model. This version supports only
-execution-gas-only networks using 18-decimal native units. Rollup data fees and
+networks using 18-decimal native units whose total gas fee is bounded by
+`gasLimit × gasPrice` (legacy) or `gasLimit × maxFeePerGas` (EIP-1559).
+Select `feeModel: "gas-limit-times-price"` only after wallet qualification.
+This bound includes state gas charged within the transaction gas limit. Rollup data fees and
 other network-specific charges require a different adapter. A chain ID alone
 does not establish support. Policy caps are per transaction, not a daily budget.
 
@@ -49,7 +54,11 @@ included.
 
 The reader pins chain ID and genesis, binds state reads to a single canonical
 block with EIP-1898, and checks freshness, balance, pending nonce, sender code,
-destination code and simulation results. Providers without genesis history or
+destination code and simulation results. Native recipients must have a nonzero balance or nonce at the inspected block.
+EIP-2780/EIP-8037 change intrinsic/state gas; the restricted positive transfer
+to an existing different account uses all 21,000 execution gas. Empty accounts
+and transfers with cheaper intrinsic costs need separate qualification.
+Providers without genesis history or
 EIP-1898 support fail closed. These are RPC assertions, not consensus proofs;
 an untrusted or compromised provider can lie. Run or independently verify trusted
 infrastructure for production qualification.
@@ -82,3 +91,8 @@ delivery. Live network evidence, when present, is separately recorded under
 - [ERC-20](https://eips.ethereum.org/EIPS/eip-20)
 - [EIP-7702](https://eips.ethereum.org/EIPS/eip-7702)
 - [ethers transaction API](https://docs.ethers.org/v6/api/transaction/)
+
+- [Sepolia Glamsterdam activation](https://blog.ethereum.org/2026/09/17/glamsterdam-testnet-announcement)
+- [EIP-2780](https://eips.ethereum.org/EIPS/eip-2780)
+- [EIP-8037](https://eips.ethereum.org/EIPS/eip-8037)
+- [EIP-7708](https://eips.ethereum.org/EIPS/eip-7708)

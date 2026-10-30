@@ -1,0 +1,16 @@
+{
+  "started": "2026-10-30T17:21:53.315Z",
+  "completed": "2026-10-30T17:29:35.285Z",
+  "commit": "416442316c992fffa7aba436e025c0cef9fb1410",
+  "dirty": true,
+  "network": "Ethereum Sepolia",
+  "chain": "eip155:11155111",
+  "stage": "request",
+  "status": "blocked_or_failed",
+  "code": "wallet_rejected",
+  "transactionConfirmed": false,
+  "decisions": 0,
+  "executions": 0,
+  "broadcasts": 0,
+  "productionReady": false
+}

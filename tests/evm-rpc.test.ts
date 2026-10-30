@@ -4,7 +4,7 @@ import {Wallet} from 'ethers';
 import {nowSeconds,random} from '@oathconnect/protocol';
 import {EvmRpc,decodeEvmTransaction,type EvmPolicy} from '@oathconnect/evm';
 const genesis='0x'+'11'.repeat(32),blockHash='0x'+'22'.repeat(32),account=Wallet.createRandom().address,recipient=Wallet.createRandom().address;
-const policy:EvmPolicy={chainId:'11155111',genesisHash:genesis,account,nativeSymbol:'ETH',feeModel:'execution-gas-only',maximumGas:'21000',maximumFeePerGas:'1000000000',maximumExecutionFee:'21000000000000',maximumValue:'1',maximumBlockAge:120,tokens:[]};
+const policy:EvmPolicy={chainId:'11155111',genesisHash:genesis,account,nativeSymbol:'ETH',feeModel:'gas-limit-times-price',maximumGas:'21000',maximumFeePerGas:'1000000000',maximumGasFee:'21000000000000',maximumValue:'1',maximumBlockAge:120,tokens:[]};
 const plan=()=>decodeEvmTransaction({type:'request',id:random(16),chain:'eip155:11155111',account,method:'eth_sendTransaction',expires:nowSeconds()+120,params:[{type:'0x2',chainId:'0xaa36a7',from:account,to:recipient,nonce:'0x0',gas:'0x5208',value:'0x1',data:'0x',maxFeePerGas:'0x3b9aca00',maxPriorityFeePerGas:'0x1'}]},policy);
 const signal=()=>new AbortController().signal;
 test('EVM RPC pins all state reads and simulation to one canonical block',async()=>{
@@ -20,7 +20,7 @@ test('EVM RPC pins all state reads and simulation to one canonical block',async(
     return Response.json({jsonrpc:'2.0',id:q.id,result});
   });
   const state=await rpc.inspect(plan(),signal());assert.equal(state.genesisHash,genesis);assert.equal(state.blockHash,blockHash);assert.equal(state.chainId,'11155111');
-  for(const q of calls.filter(q=>['eth_getCode','eth_getBalance','eth_call'].includes(q.method)))assert.deepEqual(q.params[1],{blockHash,requireCanonical:true});
+  for(const q of calls.filter(q=>(['eth_getCode','eth_getBalance','eth_call'].includes(q.method)||(q.method==='eth_getTransactionCount'&&q.params[1]!=='pending'))))assert.deepEqual(q.params[1],{blockHash,requireCanonical:true});
   assert.equal(calls.filter(q=>q.method==='eth_chainId').length,2);
   assert.ok(calls.some(q=>q.method==='eth_getBlockByNumber'&&q.params[0]==='0x10'));
 });

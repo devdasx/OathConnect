@@ -14,11 +14,12 @@
     "Unbounded allowances and nonzero-to-nonzero approvals",
     "Closure or expiry during asynchronous signing; native task cancellation during execution",
     "Concurrent execution of one nonce; uncertain submission with no automatic retry",
-    "RPC mismatched response IDs, oversized data, raw error redaction and aborted calls"
+    "RPC mismatched response IDs, oversized data, raw error redaction and aborted calls",
+    "New native recipient, zero-value and self transfers under EIP-2780/EIP-8037"
   ],
   "checks": {
     "typescript": {
-      "tests": 44,
+      "tests": 45,
       "failed": 0
     },
     "swiftHost": {
@@ -39,12 +40,18 @@
   "limits": [
     "Execution contexts are cooperative and cannot undo an already dispatched signature or network submission",
     "Restricted EVM methods only; arbitrary contract calls, THORChain routers, permits, messages, blobs and delegated accounts are unsupported",
-    "Execution-gas-only fee policy requires separate network qualification; no rollup data fee support",
+    "Gas-limit-times-price fee policy requires separate network qualification; no rollup data fee support",
     "RPC answers are not consensus proofs, and token bytecode pins do not attest implementation/storage or future behavior",
     "Attempted nonce memory is not durable; wallet integrations must coordinate nonces and persist privacy-safe submission evidence",
     "Host tests do not establish live network or token qualification; see separate dated network receipts"
   ],
   "productionReady": false,
   "independentAuditCompleted": false,
-  "oathWalletIntegrated": false
+  "oathWalletIntegrated": false,
+  "networkFinding": {
+    "network": "Sepolia",
+    "observed": "Funded fixture rejected eth_call before approval/signing: additional state gas for a new recipient under Glamsterdam",
+    "change": "Keep 21,000-gas bound for positive transfers to existing different accounts; reject new-account, zero-value and self transfers; validate EIP-7708 system transfer log in fixture",
+    "source": "https://blog.ethereum.org/2026/09/17/glamsterdam-testnet-announcement"
+  }
 }

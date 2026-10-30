@@ -13,16 +13,25 @@ fee cap. Do not buy funds or use an existing wallet. Unused test funds remain
 in the disposable account when the process ends; the key is not saved.
 
 The fixed test policy permits exactly one EIP-1559 native transfer of one wei
-to another generated account, 21,000 gas, a 1-gwei maximum fee and 0.1-gwei tip.
+to a previously generated and funded disposable account, 21,000 gas, a 1-gwei maximum fee and 0.1-gwei tip.
 It uses the reusable EVM adapter, encrypted session and digest-bound approval.
 Approval is automated for these exact fixture parameters, not a user-interface
-test. It checks a successful canonical receipt and recipient balance delta.
+test. It checks a successful canonical receipt, the EIP-7708 system Transfer log,
+and recipient balance delta.
 Canonical inclusion is recorded separately from consensus finality.
 
 Evidence archives retain failed attempts and the transaction hash before
 submission. A failed or interrupted submission must be reconciled by hash;
 the runner never retries it. A new run creates another disposable account.
 Keys, raw transactions, grants and pairing secrets are never printed or saved.
+
+The first funded run rejected before approval/signing because Sepolia activated
+Glamsterdam on October 6, 2026: creating a new recipient account now costs
+additional state gas. The attempted run remains in the evidence archive. The
+current fixture uses that run's funded disposable sender as its recipient; its
+key was discarded, and it is not a user wallet. The adapter now explicitly
+checks recipient existence and rejects zero-value/self transfers. These cases
+need separate gas-policy qualification; increasing gas is not an automatic fix.
 
 By default the relay is local Cloudflare workerd. Deployed testing uses the
 separate one-hour validation workflow described in `docs/DEPLOYMENT.md` and
