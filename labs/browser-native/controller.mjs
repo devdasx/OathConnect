@@ -12,7 +12,7 @@ const sourceCommit=()=>execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}
 async function verifiedRegistry(){
   const projects=validateProjects(readJSON('registry/projects.json'));
   const project=projects.find(p=>p.id==='oathconnect-validation');
-  if(!project?.enabled||!project.notAfter||project.notAfter<=nowSeconds()+300||!project.origins.includes(relay))throw Error('validation_not_approved');
+  if(!project?.enabled||!project.notAfter||project.notAfter<=nowSeconds()+300||!project.origins.some(origin=>origin===relay))throw Error('validation_not_approved');
   const get=async path=>{const r=await fetch(relay+path,{redirect:'error',cache:'no-store',signal:AbortSignal.timeout(15000)});if(!r.ok)throw Error('relay_unavailable');return r.json();};
   const [health,registry]=await Promise.all([get('/health'),get('/v1/registry')]);
   if(health.commit!==sourceCommit()||health.productionReady!==false||canonical(registry.projects)!==canonical(projects))throw Error('deployed_source_mismatch');
