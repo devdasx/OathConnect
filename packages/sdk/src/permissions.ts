@@ -1,4 +1,4 @@
-import {canonical, digest, integer, nowSeconds, parseJSON, random, record, requireThat} from '@oathconnect/protocol';
+import {canonical, digest, fixed, utf8, integer, nowSeconds, parseJSON, random, record, requireThat} from '@oathconnect/protocol';
 
 export interface Capability {chain: string; account: string; methods: string[]}
 export interface RequestedCapability {chain: string; methods: string[]; account?: string}
@@ -39,10 +39,10 @@ export function isSubset(approved: Capability[], requested: RequestedCapability[
 }
 export function validateRequest(value: unknown, capabilities: readonly Capability[], now = nowSeconds()): SigningRequest {
   record(value, ['type', 'id', 'chain', 'account', 'method', 'params', 'expires']); requireThat(value.type === 'request');
-  requireThat(typeof value.id === 'string' && /^[A-Za-z0-9_-]{22}$/.test(value.id), 'invalid_request_id');
+  fixed(value.id, 16);
   integer(value.expires, now + 1, now + 120);
   requireThat(capabilities.some(c => c.chain === value.chain && c.account === value.account && c.methods.includes(value.method as string)), 'unauthorized_request');
-  const encoded = canonical(value); requireThat(encoded.length <= 22_000, 'message_too_large');
+  const encoded = canonical(value); requireThat(utf8(encoded).length <= 22_000, 'message_too_large');
   return deepFreeze(parseJSON(encoded)) as SigningRequest;
 }
 function deepFreeze(value: unknown): unknown {
@@ -72,7 +72,7 @@ export class WalletAuthorizer {
       requireThat(!this.#closed && nowSeconds() < request.expires, 'request_expired');
       requireThat(approval.approved === true && approval.requestDigest === requestDigest, 'user_rejected');
       const result = await adapter.execute(request);
-      requireThat(canonical(result).length <= 22_000, 'result_too_large'); return result;
+      requireThat(utf8(canonical(result)).length <= 22_000, 'result_too_large'); return result;
     } finally { this.#busy = false; }
   }
 }

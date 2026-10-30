@@ -22,3 +22,41 @@ test('end-to-end SDK negotiation and user-approved request through Cloudflare ru
     await d.close();
   } finally {await f.mf.dispose();}
 });
+
+async function pairedFixture() {
+  const f = await fixture(), p = await createPairing(f.audience), joined = await joinPairing(p.uri, f.audience);
+  const dc = f.client(p.invitation.session, 'dapp', await createIdentity()), wc = f.client(p.invitation.session, 'wallet', await createIdentity());
+  await dc.create(p.invitation.expires); await wc.join(joined.hello);
+  const channel = await p.accept(await dc.hello());
+  const d = new Session(channel, dc, f.projects), w = new Session(joined.channel, wc, f.projects);
+  const cap = {chain:'eip155:11155111',account:'0x1234',methods:['personal_sign']};
+  await Promise.all([d.propose([cap]), w.approveSession(async()=>[cap])]);
+  let executions = 0, prompts = 0;
+  const makeAuthorizer = () => new WalletAuthorizer([cap], new Map([[cap.chain+'/personal_sign', {
+    async review(r) {return {requestDigest:await digest(canonical(r)),summary:'Test-only action',warnings:[]};},
+    async execute() {executions++;return null;}
+  }]]), async(_,review)=>{prompts++;return {approved:true,requestDigest:review.requestDigest};});
+  return {f,dc,wc,d,w,cap,channel,makeAuthorizer,counts:()=>({executions,prompts})};
+}
+
+test('closing during the final request acknowledgement prevents approval and execution', async () => {
+  const p = await pairedFixture();
+  try {
+    const ack = p.wc.acknowledge.bind(p.wc);
+    p.wc.acknowledge = async through => {const result = await ack(through); if (through === 2) await p.w.close(); return result;};
+    const outcomes = await Promise.allSettled([p.d.request(p.cap,'personal_sign',['fixture']),p.w.serveOnce(p.makeAuthorizer())]);
+    assert.ok(outcomes.every(r=>r.status==='rejected'));
+    assert.deepEqual(p.counts(),{executions:0,prompts:0});
+  } finally {await p.f.mf.dispose();}
+});
+
+test('request IDs stay consumed when the application replaces its authorizer', async () => {
+  const p = await pairedFixture();
+  try {
+    const {newRequest} = await import('@oathconnect/sdk'); const request = newRequest(p.cap,'personal_sign',['fixture']);
+    await p.dc.send(await p.channel.seal(request)); await p.w.serveOnce(p.makeAuthorizer());
+    await p.dc.send(await p.channel.seal(request));
+    await assert.rejects(p.w.serveOnce(p.makeAuthorizer()),/duplicate_or_exhausted_request/);
+    assert.deepEqual(p.counts(),{executions:1,prompts:1});
+  } finally {await p.f.mf.dispose();}
+});

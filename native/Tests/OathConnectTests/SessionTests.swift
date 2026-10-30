@@ -6,14 +6,16 @@ private actor TestRelay: WalletRelay {
     nonisolated let relay = "https://relay.example.org", session: String
     let sendKey: SymmetricKey, receiveKey: SymmetricKey
     let expires: Int
+    var onRequestAcknowledged: (@Sendable () async -> Void)?
     var inbox: [Data], replies: [JSONValue] = [], closed = false
     init(session: String, sendKey: SymmetricKey, receiveKey: SymmetricKey, expires: Int, inbox: [Data]) {
         self.session = session; self.sendKey = sendKey; self.receiveKey = receiveKey; self.expires = expires; self.inbox = inbox
     }
-    func call(method: String, suffix: String, grant: String, body: Data) throws -> Data {
+    func call(method: String, suffix: String, grant: String, body: Data) async throws -> Data {
         try check(!closed)
         if method == "GET" {return try json(["messages": try inbox.prefix(1).map {try JSONSerialization.jsonObject(with: $0)}])}
         if method == "DELETE" && suffix.hasPrefix("/messages") {inbox.removeFirst()}
+        if method == "DELETE" && suffix == "/messages?through=2" {await onRequestAcknowledged?()}
         if method == "POST" {
             let f = try object(body, keys:["v","session","sender","sequence","expires","nonce","ciphertext"])
             let bytes = try decode64(string(f,"ciphertext"),maximum:24592)
@@ -24,6 +26,7 @@ private actor TestRelay: WalletRelay {
         return Data("{}".utf8)
     }
     func attest(value: Data, grant: String) throws -> Data {try json(["origin":"", "grant":grant, "proof":"test-transport-only"])}
+    func setAcknowledgementHook(_ hook: @escaping @Sendable () async -> Void) {onRequestAcknowledged = hook}
     func close() {closed = true}
     func count() -> Int {replies.count}
     func last() -> JSONValue? {replies.last}
@@ -75,6 +78,15 @@ final class SessionTests: XCTestCase, @unchecked Sendable {
         let authorizer = try WalletAuthorizer(capabilities:[wider],adapters:[wider.chain+"/test_sign":adapter],approve:{_,review in .init(approved:true,requestDigest:review.requestDigest)})
         do {try await session.serveOnce(authorizer:authorizer); XCTFail("Unauthorized request accepted")} catch {}
         let count = await adapter.count(), replies = await relay.count(); XCTAssertEqual(count,0); XCTAssertEqual(replies,1)
+    }
+    func testClosingDuringRequestAcknowledgementPreventsExecution() async throws {
+        let (session, relay, cap) = try fixture(); try await session.join()
+        _ = try await session.approveSession {_,_ in [cap]}
+        await relay.setAcknowledgementHook {await session.close()}
+        let adapter = SessionAdapter()
+        let authorizer = try WalletAuthorizer(capabilities:[cap],adapters:[cap.chain+"/test_sign":adapter],approve:{_,review in .init(approved:true,requestDigest:review.requestDigest)})
+        do {try await session.serveOnce(authorizer:authorizer); XCTFail("Closed session accepted request")} catch {}
+        let executed = await adapter.count(); XCTAssertEqual(executed,0)
     }
     func testClosingDuringSessionPromptPreventsApprovalReply() async throws {
         let (session, relay, cap) = try fixture(); try await session.join()

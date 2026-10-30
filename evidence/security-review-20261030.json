@@ -1,0 +1,42 @@
+{
+  "baselineCommit": "854368d9a41865a5957c11b6a3ef62f0288cb8d7",
+  "scope": "Targeted source review and adversarial regressions by the implementation agent; not an independent or completed protocol audit",
+  "findings": [
+    {
+      "id": "OC-2026-001",
+      "boundary": "TypeScript Session and Swift WalletSession shutdown",
+      "before": "A close during request acknowledgement still reached one approval/execution in the controlled fixtures. Per-request approval itself was not bypassed.",
+      "repair": "Recheck closure/cancellation after asynchronous receive/acknowledgement and before authorization",
+      "after": "Both regressions pass with zero executions"
+    },
+    {
+      "id": "OC-2026-002",
+      "boundary": "TypeScript session request-ID replay protection",
+      "before": "The same request ID in a fresh encrypted frame was accepted when the application constructed a replacement authorizer",
+      "repair": "Keep a bounded consumed-request set for the entire session independently of the authorizer instance",
+      "after": "Duplicate rejected; one total approval/execution"
+    },
+    {
+      "id": "OC-2026-003",
+      "boundary": "TypeScript/native request conformance",
+      "before": "TypeScript accepted noncanonical 16-byte request IDs and measured request size as UTF-16 units rather than UTF-8 bytes",
+      "repair": "Use canonical fixed-length base64url validation and UTF-8 byte limits",
+      "after": "Canonical encoding and multibyte size regression passes"
+    }
+  ],
+  "checks": {
+    "typescript": {
+      "tests": 25,
+      "failed": 0
+    },
+    "swiftHost": {
+      "tests": 12,
+      "failed": 0
+    },
+    "genericIOSBuild": "passed",
+    "simulator": "not run",
+    "physicalDevice": "not run"
+  },
+  "productionReady": false,
+  "independentAuditCompleted": false
+}

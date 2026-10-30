@@ -45,7 +45,8 @@ public actor WalletSession {
     private func begin() throws {try check(!closed && !busy, .invalidState); busy = true}
     private func call(_ method: String, _ suffix: String = "", _ body: Data = Data()) async throws -> Data {
         try check(!closed, .invalidState); let grant = try await getGrant(); try check(!closed, .invalidState)
-        return try await transport.call(method: method, suffix: suffix, grant: grant, body: body)
+        let response = try await transport.call(method: method, suffix: suffix, grant: grant, body: body)
+        try Task.checkCancellation(); try check(!closed, .invalidState); return response
     }
     private func send(_ value: JSONValue) async throws {
         try check(!closed, .invalidState)
@@ -60,6 +61,7 @@ public actor WalletSession {
             if let frame = messages.first {
                 let clear = try await channel.open(frame: json(frame))
                 cursor = try number(frame, "sequence"); _ = try await call("DELETE", "/messages?through=\(cursor)")
+                try Task.checkCancellation(); try check(!closed && timestamp() < deadline, .expired)
                 return clear
             }
             try await Task.sleep(for: .seconds(2))
@@ -94,6 +96,7 @@ public actor WalletSession {
         do {
             guard let capabilities else {throw OathConnectError.invalidState}
             let data = try await receive(deadline: timestamp() + 120)
+            try Task.checkCancellation(); try check(!closed, .invalidState)
             let request = try SigningRequest(data: data, capabilities: capabilities)
             try check(!seen.contains(request.id) && seen.count < 1024, .replayOrGap); seen.insert(request.id)
             activeAuthorizer = authorizer

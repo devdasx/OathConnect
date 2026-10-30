@@ -25,3 +25,10 @@ test('rejection, mismatched approval, shutdown during prompt and unknown adapter
   const a = new WalletAuthorizer([cap], new Map([[`${cap.chain}/eth_sendTransaction`, adapter]]), async (_, r) => {a.close(); return {approved: true, requestDigest: r.requestDigest};});
   await assert.rejects(a.handle(newRequest(cap, 'eth_sendTransaction', {})), /request_expired/); assert.equal(executed, 0);
 });
+
+test('request IDs use canonical 16-byte encoding and size limits count UTF-8 bytes', async () => {
+  const {validateRequest} = await import('@oathconnect/sdk');
+  const request = newRequest(cap, 'eth_sendTransaction', {});
+  assert.throws(()=>validateRequest({...request,id:'A'.repeat(21)+'B'},[cap]),/invalid_base64/);
+  assert.throws(()=>newRequest(cap,'eth_sendTransaction',{text:'€'.repeat(8000)}),/message_too_large/);
+});
