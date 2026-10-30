@@ -1,20 +1,23 @@
-# Fixed Solana devnet qualification
+# Fixed Solana test-network qualification
 
 This is a standalone **test fixture**, not a general-purpose Solana adapter or
 Oath Wallet integration. It accepts only one legacy message: one signer, three
-accounts and one System Program transfer of exactly 0.001 devnet SOL to a newly
+accounts and one System Program transfer of exactly 0.001 test-network SOL to a newly
 generated disposable account. Versioned messages, extra instructions, tokens,
 program calls, durable nonces and imported wallets are unsupported.
 
 From a clean checkout, run `npm ci --ignore-scripts`, `npm run build`, then
-`node labs/solana/run.mjs`. Fund the printed public address with free devnet SOL
-during its 20-minute window. Both keys stay in process memory. The temporary
+`node labs/solana/run.mjs` for devnet, or `node labs/solana/run.mjs testnet` for
+the separate Solana testnet cluster. Fund the printed public address with free SOL
+on that exact cluster during its 20-minute window. Both keys stay in process memory. The temporary
 file contains only the public funding address and expiry and is removed at exit.
-There is no mainnet mode. The original RPC airdrop attempt returned HTTP 410;
+There is no mainnet or custom-endpoint mode. Both choices have immutable endpoint,
+genesis and capability pins. Testnet can run different software from devnet;
+a pass on one does not certify the other. The original RPC airdrop attempt returned HTTP 410;
 the fixture now waits for external free funding instead of repeatedly calling it.
 See the [Solana Foundation faucet guide](https://solana.com/developers/cookbook/development/airdrops-and-faucets).
 
-The fixture pins devnet genesis and checks account ownership/data, recipient
+The fixture pins the selected cluster's genesis and checks account ownership/data, recipient
 absence, rent requirements, fee cap, blockhash validity and simulation before
 approval, before signing and after signing. Exact decoded bytes are approved;
 Node's Ed25519 implementation signs, and signature verification independently
@@ -52,14 +55,19 @@ devnet slot 516914340 with one approval, signature and submission. See the
 
 Run `node labs/solana/reconcile.mjs local` (or `live`) to check the retained
 public signature at finalized commitment without signing or sending again.
+Add `testnet` as the final argument for that cluster's separate evidence.
 It verifies the signature, fixed transfer, receipt effects and agreement with
 the provider's finalized signature status. It stores only filtered public
 evidence, never the signed transaction bytes. This is one RPC provider's
 assertion of finality, not independent consensus proof. A missing receipt is
-not permission to resubmit. The deployed Solana test is still open.
+not permission to resubmit. The deployed Solana test is still open. The unfunded
+deployed-devnet process was stopped before pairing/signing when alternative funding
+was unavailable; see [attempt](../../evidence/solana-devnet-live.json). The testnet
+option has passed host tests but has not yet completed a funded network run.
 
 Primary references:
 
 - [Solana transaction structure](https://solana.com/docs/core/transactions)
+- [Distinct clusters and official endpoints](https://solana.com/docs/references/clusters)
 - [Simulation and signature verification](https://solana.com/docs/rpc/http/simulatetransaction)
 - [Confirmed transaction lookup](https://solana.com/docs/rpc/http/gettransaction)

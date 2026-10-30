@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {generateKeyPairSync,sign,randomBytes} from 'node:crypto';
 import {AMOUNT,CHAIN,GENESIS,SYSTEM,buildTransfer,decodeTransfer,decode58,decode64,encode58,inspectAccounts,verifiedWire,verifyReceipt} from './transfer.mjs';
 import {FixedSolanaAdapter} from './adapter.mjs';
+import {labNetwork} from './networks.mjs';
 import {WalletAuthorizer,newRequest} from '@oathconnect/sdk';
 import {canonical,ProtocolError} from '@oathconnect/protocol';
 function fixture(){
@@ -32,10 +33,11 @@ test('account state rejects code, non-system ownership, stale context and preexi
  const f=fixture();assert.equal(inspectAccounts(f.accounts,f.plan,100),100);
  for(const change of [r=>r.context.slot=99,r=>r.value[0].data=['AA==','base64'],r=>r.value[0].owner=f.plan.to,r=>r.value[0].executable=true,r=>r.value[0].lamports=Number(AMOUNT),r=>r.value[1]={}]){const r=structuredClone(f.accounts);change(r);assert.throws(()=>inspectAccounts(r,f.plan,100));}
 });
-function adapterFixture({send='ok',onSign,override}={}){
+function adapterFixture({send='ok',onSign,override,networkName='devnet'}={}){
+ const network=labNetwork(networkName);
  const f=fixture(),calls=[],state={signs:0,preserved:[],sends:0};
  const rpc={async request(method,params,signal){assert.equal(signal.aborted,false);calls.push([method,params]);if(override){const out=await override(method,params);if(out!==undefined)return out;}
-  if(method==='getGenesisHash')return GENESIS;
+  if(method==='getGenesisHash')return network.genesis;
   if(method==='getMultipleAccounts')return f.accounts;
   if(method==='isBlockhashValid')return{context:{slot:100},value:true};
   if(method==='getFeeForMessage')return{context:{slot:100},value:5000};
@@ -44,9 +46,9 @@ function adapterFixture({send='ok',onSign,override}={}){
   if(method==='sendTransaction'){state.sends++;assert.equal(params[0],f.signed.wire);assert.equal(params[1].maxRetries,0);assert.equal(params[1].skipPreflight,false);assert.deepEqual(state.preserved,[f.signed.signature]);if(send==='throw')throw Error('secret signed bytes');return send==='wrong'?'unexpected':f.signed.signature;}
   throw Error('Unexpected method');
  }};
- const adapter=new FixedSolanaAdapter({message:f.message,minimumSlot:100,rpc,async sign(message,context){state.signs++;await onSign?.(context);return sign(null,decode64(message,150),f.sender.privateKey);},async beforeSubmit(signature){state.preserved.push(signature);}});
+ const adapter=new FixedSolanaAdapter({networkName,message:f.message,minimumSlot:100,rpc,async sign(message,context){state.signs++;await onSign?.(context);return sign(null,decode64(message,150),f.sender.privateKey);},async beforeSubmit(signature){state.preserved.push(signature);}});
  const controller=new AbortController(),context={signal:controller.signal,deadline:Math.floor(Date.now()/1000)+120,assertActive(){if(controller.signal.aborted)throw new ProtocolError('request_expired');}};
- const cap={chain:CHAIN,account:f.plan.from,methods:['solana_signAndSendTransaction']},request=newRequest(cap,cap.methods[0],{message:f.message});
+ const cap={chain:network.chain,account:f.plan.from,methods:['solana_signAndSendTransaction']},request=newRequest(cap,cap.methods[0],{message:f.message});
  return{...f,adapter,cap,request,context,controller,calls,state};
 }
 test('one exact approval/signature/submission checks state, unsigned simulation and retained signature',async()=>{
@@ -71,4 +73,14 @@ test('simulation never exposes a valid signed transaction, including after local
   }
  }});
  await f.adapter.review(f.request,f.context);const result=await f.adapter.execute(f.request,f.context);assert.equal(result.status,'submitted');assert.equal(exposed,false);assert.equal(f.state.signs,1);assert.equal(f.state.sends,1);
+});
+
+test('explicit testnet selection binds capability, genesis and displayed approval network',async()=>{
+ const f=adapterFixture({networkName:'testnet'});const review=await f.adapter.review(f.request,f.context);
+ assert.match(review.summary,/Solana testnet/);assert.equal((await f.adapter.execute(f.request,f.context)).status,'submitted');
+ for(const [kind,code] of [['chain','solana_test_policy_rejected'],['genesis','solana_network_mismatch']]){
+  const g=adapterFixture({networkName:'testnet',...(kind==='genesis'?{override:m=>m==='getGenesisHash'?GENESIS:undefined}:{})});
+  const request=kind==='chain'?{...g.request,chain:CHAIN}:g.request;
+  await assert.rejects(()=>g.adapter.review(request,g.context),{code});assert.equal(g.state.signs,0);assert.equal(g.state.sends,0);
+ }
 });
