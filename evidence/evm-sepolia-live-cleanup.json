@@ -1,0 +1,15 @@
+{
+  "checkedAt": "2026-10-30T20:51:54.465Z",
+  "deployedCommit": "14bc5d1d9dd953a1e501a499ca8741ccb521fd16",
+  "verificationRun": "https://github.com/devdasx/OathConnect/actions/runs/41126235407",
+  "deploymentRun": "https://github.com/devdasx/OathConnect/actions/runs/41126454327",
+  "activeApprovedProjects": 0,
+  "disabledProjectAdmission": {
+    "status": 400,
+    "code": "project_not_approved"
+  },
+  "privateIssuerFileRemoved": true,
+  "disposableTransactionKey": "Process ended after the confirmed transfer; key was never exported",
+  "scope": "Expired and disabled approval denial; within-lifetime revocation was not rerun in this qualification",
+  "productionReady": false
+}
