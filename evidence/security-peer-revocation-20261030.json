@@ -1,0 +1,27 @@
+{
+  "baselineCommit": "abe6f6da067f7c7564ac9bdc301c632100fb6725",
+  "scope": "Targeted relay revocation review by the implementation agent; not an independent or completed audit",
+  "finding": {
+    "id": "OC-2026-006",
+    "before": "With separate website and wallet integrators, a wallet received HTTP 200 and a queued message after the website approval was disabled and the relay restarted with that registry.",
+    "repair": "Pin issuer public keys and origins for both peers; validate both approvals for every relay operation. Observed revocation permanently closes that session and deletes queued messages. Carry the issuer actually verified by the Worker into the Durable Object to reject stale deployment snapshots.",
+    "after": "Tests reject disabled/expired projects, removed origins or roles, replaced issuer keys, and a disabled wallet peer. Reenabling an observed-revoked project does not revive its closed session. A stale Worker issuer snapshot cannot create a session."
+  },
+  "checks": {
+    "typescript": {
+      "tests": 28,
+      "failed": 0
+    },
+    "swiftHost": "not rerun locally for this relay-only change; unchanged native sources last passed 14 host tests",
+    "genericIOSBuild": "not rerun for this relay-only change",
+    "simulator": "not run",
+    "physicalDevice": "not run",
+    "deployedRevocationTest": "not performed for this change; regression uses the local Cloudflare runtime and persistent restart"
+  },
+  "compatibility": "Pre-upgrade sessions without pinned peer metadata fail closed and require re-pairing.",
+  "limits": [
+    "The relay cannot recall a message already delivered or a signing operation already dispatched. Wallet policy and user approval remain independent security boundaries."
+  ],
+  "productionReady": false,
+  "independentAuditCompleted": false
+}
