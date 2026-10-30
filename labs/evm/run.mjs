@@ -33,14 +33,15 @@ try {
   const policy={chainId:'11155111',genesisHash:genesis,account:sender.address,nativeSymbol:'ETH',feeModel:'gas-limit-times-price',maximumGas:'21000',maximumFeePerGas:'1000000000',maximumGasFee:'21000000000000',maximumValue:'1',maximumBlockAge:120,tokens:[]};
   stage='free_testnet_funding';
   fundingDirectory=mkdtempSync(join(tmpdir(),'oathconnect-sepolia-'));
-  writeFileSync(join(fundingDirectory,'funding.json'),JSON.stringify({network:'Sepolia',chain,address:sender.address,expires:Date.now()+1200000})+'\n',{mode:0o600,flag:'wx'});
+  const fundingDeadline=Date.now()+1200000;
+  writeFileSync(join(fundingDirectory,'funding.json'),JSON.stringify({network:'Sepolia',chain,address:sender.address,expires:fundingDeadline})+'\n',{mode:0o600,flag:'wx'});
   console.log(JSON.stringify({stage,address:sender.address,publicFundingFile:join(fundingDirectory,'funding.json'),expiresInSeconds:1200}));
   let funded=false;
-  for(let attempt=0;attempt<240;attempt++){
-    const balance=await rpc.request('eth_getBalance',[sender.address,'latest'],bounded());
+  while(Date.now()<fundingDeadline){
+    const balance=await rpc.request('eth_getBalance',[sender.address,'latest'],AbortSignal.timeout(Math.max(1,Math.min(15000,fundingDeadline-Date.now()))));
     check(typeof balance==='string'&&/^0x[0-9a-f]+$/.test(balance),'evm_lab_balance_invalid');
     if(BigInt(balance)>=21000000000001n){funded=true;break;}
-    await delay(5000);
+    await delay(Math.max(0,Math.min(5000,fundingDeadline-Date.now())));
   }
   check(funded,'evm_lab_funding_timeout'); await identity();
   stage='pair'; relay=await validationRelay();

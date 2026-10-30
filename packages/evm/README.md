@@ -13,7 +13,7 @@ audit, and is not approved for real funds. It does not integrate Oath Wallet.
   are excluded. Both sender and
   destination must have no code; reserved low addresses are rejected.
 - Canonical ERC-20 `transfer` and `approve` calls to wallet-allowlisted bytecode.
-  Approval amounts are capped by wallet policy, and a nonzero allowance must be
+  The unlimited uint256 sentinel is rejected. Approval amounts are capped by wallet policy, and a nonzero allowance must be
   reset to zero before setting another nonzero allowance.
 
 Amounts and fees use lossless integer strings. Contract deployment, arbitrary

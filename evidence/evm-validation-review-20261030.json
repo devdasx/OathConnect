@@ -15,11 +15,12 @@
     "Closure or expiry during asynchronous signing; native task cancellation during execution",
     "Concurrent execution of one nonce; uncertain submission with no automatic retry",
     "RPC mismatched response IDs, oversized data, raw error redaction and aborted calls",
-    "New native recipient, zero-value and self transfers under EIP-2780/EIP-8037"
+    "New native recipient, zero-value and self transfers under EIP-2780/EIP-8037",
+    "Malformed signature recovery errors are converted to fixed protocol codes without library data; unlimited allowance sentinel is rejected even in wallet policy"
   ],
   "checks": {
     "typescript": {
-      "tests": 45,
+      "tests": 46,
       "failed": 0
     },
     "swiftHost": {

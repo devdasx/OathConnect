@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {Wallet, Transaction, keccak256} from 'ethers';
-import {nowSeconds, random} from '@oathconnect/protocol';
+import {Wallet, Transaction, keccak256, decodeRlp, encodeRlp} from 'ethers';
+import {nowSeconds, random, ProtocolError} from '@oathconnect/protocol';
 import {WalletAuthorizer, type ExecutionContext, type SigningRequest, type Review} from '@oathconnect/sdk';
 import {decodeEvmTransaction, EvmAdapter, verifyEvmSignature, type EvmPolicy, type EvmState, type EvmHooks} from '@oathconnect/evm';
 
@@ -66,6 +66,8 @@ test('ERC20 approvals are bounded, explicitly described, and require zero-before
   const revoke=fixture(policy(),{inspect:async()=>({...tokenState(),allowance:'999999999'})});
   await revoke.authorizer.handle(request(tokenTx('0x095ea7b3',0n)));assert.equal(revoke.counts.broadcasts,1);
   assert.throws(()=>decodeEvmTransaction(request(tokenTx('0x095ea7b3',(1n<<256n)-1n)),policy()),/allowance_limit/);
+  const unlimited=policy();(unlimited.tokens[0] as {maximumApproval:string}).maximumApproval=((1n<<256n)-1n).toString();
+  assert.throws(()=>new EvmAdapter(unlimited,{} as EvmHooks),/integer_overflow/);
 });
 test('trusted-network state rejects wrong genesis, stale blocks, delegation, changed code and false simulation',async()=>{
   for(const patch of [{chainId:'1'},{genesisHash:'0x'+'33'.repeat(32)},{blockTimestamp:nowSeconds()-1000},{observedAt:nowSeconds()-60},{pendingNonce:'1'},{balance:'0'},{senderCode:'0xef0100'+'44'.repeat(20)},{destinationCode:code}]){
@@ -129,4 +131,12 @@ test('native transfers exclude new accounts, zero value and self transfers under
   await existing.authorizer.handle(request());assert.equal(existing.counts.broadcasts,1);
   assert.throws(()=>decodeEvmTransaction(request({...transaction(),value:'0x0'}),policy()),/native_transfer_policy/);
   assert.throws(()=>decodeEvmTransaction(request({...transaction(),to:sender.address}),policy()),/native_transfer_policy/);
+});
+test('malformed signatures are rejected without exposing library error details',async()=>{
+  const plan=decodeEvmTransaction(request(),policy());
+  const signed=await sender.signTransaction(Transaction.from(plan.unsignedSerialized));
+  for(const component of [10,11])for(const bad of ['0x','0x'+'ff'.repeat(32)]){
+    const parts=decodeRlp('0x'+signed.slice(4)) as string[];parts[component]=bad;
+    assert.throws(()=>verifyEvmSignature(plan,'0x02'+encodeRlp(parts).slice(2)),error=>error instanceof ProtocolError&&/^evm_[a-z_]+$/.test(error.message));
+  }
 });

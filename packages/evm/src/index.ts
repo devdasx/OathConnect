@@ -107,7 +107,7 @@ function policySnapshot(value: EvmPolicy): Readonly<EvmPolicy> {
     record(token, ['address','codeHash','symbol','decimals','maximumApproval']);
     const target = address(token.address); requireThat(!seen.has(target), 'evm_duplicate_token'); seen.add(target);
     hash(token.codeHash); requireThat(typeof token.symbol === 'string' && /^[A-Za-z0-9._-]{1,20}$/.test(token.symbol), 'evm_invalid_symbol');
-    integer(token.decimals, 0, 36); decimal(token.maximumApproval);
+    integer(token.decimals, 0, 36); decimal(token.maximumApproval, UINT256 - 1n);
   }
   return freeze(policy);
 }
@@ -161,11 +161,17 @@ export function decodeEvmTransaction(request: Readonly<SigningRequest>, supplied
 /** Recover the signer and compare every unsigned field before a signed payload may leave the wallet. */
 export function verifyEvmSignature(plan: Readonly<EvmPlan>, signed: unknown): {hash: string; serialized: string} {
   hex(signed, 8192);
-  let tx: Transaction;
-  try {tx = Transaction.from(signed);} catch {throw new ProtocolError('evm_invalid_signed_transaction');}
-  requireThat(tx.isSigned() && tx.unsignedSerialized === plan.unsignedSerialized && tx.from === plan.from && tx.chainId.toString() === plan.chainId, 'evm_signed_transaction_changed');
-  requireThat(tx.serialized === signed && tx.hash, 'evm_noncanonical_signed_transaction');
-  return {hash: tx.hash, serialized: signed};
+  try {
+    const tx = Transaction.from(signed);
+    requireThat(tx.isSigned() && tx.unsignedSerialized === plan.unsignedSerialized && tx.from === plan.from && tx.chainId.toString() === plan.chainId, 'evm_signed_transaction_changed');
+    requireThat(tx.serialized === signed && tx.hash, 'evm_noncanonical_signed_transaction');
+    return {hash: tx.hash, serialized: signed};
+  } catch(error) {
+    // Recovery/serialization getters can throw lazily after parsing. Never let
+    // library errors expose signature or transaction values to host diagnostics.
+    if(error instanceof ProtocolError)throw error;
+    throw new ProtocolError('evm_invalid_signed_transaction');
+  }
 }
 
 function inspectState(plan: Readonly<EvmPlan>, state: EvmState, policy: EvmPolicy): void {
