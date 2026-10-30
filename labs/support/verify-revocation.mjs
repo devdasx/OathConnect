@@ -1,4 +1,5 @@
 // Confirm an already-issued grant stops working after its project is disabled via GitHub.
+import {execFileSync} from 'node:child_process';
 import {readFileSync,writeFileSync} from 'node:fs';
 import {createIdentity,createPairing,createProof,importIssuer,issueGrant} from '@oathconnect/protocol';
 const relay='https://oathconnect-preview.thuglifex.workers.dev',origin='https://validation.oathconnect.invalid';
@@ -18,7 +19,9 @@ while(Date.now()-started<240000){
  if(!registry.projects.some(p=>p.id==='oathconnect-validation'&&p.enabled)){
   result=await call('GET','/peer');
   if(result.status!==400||result.value.error!=='project_not_approved')throw Error('revocation_not_enforced');
-  const evidence={checkedAt:new Date().toISOString(),transport:'deployed Cloudflare relay',deployedCommit:registry.commit,beforeStatus:before.status,afterStatus:result.status,afterCode:result.value.error,grantStillWithinOriginalLifetime:true,status:'passed'};
+  const expectedCommit=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();
+  if(!/^[a-f0-9]{40}$/.test(expectedCommit)||registry.commit!==expectedCommit)throw Error('unexpected_deployed_commit');
+  const evidence={checkedAt:new Date().toISOString(),transport:'deployed Cloudflare relay',deployedCommit:expectedCommit,beforeStatus:before.status,afterStatus:400,afterCode:'project_not_approved',grantStillWithinOriginalLifetime:true,status:'passed'};
   writeFileSync('evidence/live-revocation.json',JSON.stringify(evidence,null,2)+'\n');console.log(JSON.stringify(evidence));break;
  }
  await new Promise(resolve=>setTimeout(resolve,3000));

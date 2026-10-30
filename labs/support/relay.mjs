@@ -1,3 +1,4 @@
+import {execFileSync} from 'node:child_process';
 import {readFileSync} from 'node:fs';
 import {canonical, importIssuer, issueGrant} from '@oathconnect/protocol';
 import {RelayClient} from '@oathconnect/sdk';
@@ -14,9 +15,11 @@ export async function validationRelay() {
     const r = await fetch(audience+path,{redirect:'error',signal:AbortSignal.timeout(15000),cache:'no-store'});
     if (!r.ok) throw Error('live_relay_unavailable'); return r.json();
   };
+  const expectedCommit = execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();
+  if (!/^[a-f0-9]{40}$/.test(expectedCommit)) throw Error('invalid_local_commit');
   const health = await request('/health'), publicRegistry = await request('/v1/registry');
-  if (health.productionReady !== false || canonical(publicRegistry.projects ?? publicRegistry) !== canonical(projects)) throw Error('live_registry_mismatch');
+  if (health.commit !== expectedCommit || health.productionReady !== false || canonical(publicRegistry.projects ?? publicRegistry) !== canonical(projects)) throw Error('live_registry_mismatch');
   const issuer = await importIssuer(readFileSync('/tmp/oathconnect-validation-private/issuer.pkcs8','utf8'));
   const client = (session,role,identity) => new RelayClient({relay:audience,session,role,identity,origin:role==='dapp'?project.origins[0]:'',getGrant:()=>issueGrant({project:project.id,kid:'disposable',audience,session,role,origin:role==='dapp'?project.origins[0]:'',clientKey:identity.publicKey},issuer)});
-  return {audience,projects,client,dispose:async()=>{},description:'deployed Cloudflare relay',deployedCommit:health.commit};
+  return {audience,projects,client,dispose:async()=>{},description:'deployed Cloudflare relay',deployedCommit:expectedCommit};
 }
