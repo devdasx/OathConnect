@@ -1,0 +1,22 @@
+{
+  "checked": "2026-10-30T22:33:25.022Z",
+  "sourceCommit": "5d94aa69ffa3ef9d379f516bc65258975eeaa199",
+  "network": "BNB Smart Chain testnet",
+  "chain": "eip155:97",
+  "genesisHash": "0x6d3c66c5357ec91d5c43af47e234a939b22557cbb552dc45bebbceeed90fbe34",
+  "endpoint": "https://bsc-testnet-dataseed.bnbchain.org",
+  "latestBlock": "139886195",
+  "finalizedBlock": "139886196",
+  "suggestedGasPrice": "100000000",
+  "testSink": {
+    "address": "0x00000000000000000000000000000000DeaDBeef",
+    "balance": "20001250000000000",
+    "code": "0x",
+    "nonce": "0"
+  },
+  "pinnedStateReads": true,
+  "operation": "Read-only identity, fee, finality availability and pre-existing test sink probe. No keys, funding, signing or submission.",
+  "transactionConfirmed": false,
+  "productionReady": false,
+  "observationNote": "Latest and finalized heads were read independently while the chain advanced; these fields are not an atomic comparison. State reads used EIP-1898 block-hash selection; that hash was not retained in this availability probe."
+}

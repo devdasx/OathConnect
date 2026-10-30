@@ -1,0 +1,16 @@
+{
+  "started": "2026-10-30T22:33:41.728Z",
+  "completed": "2026-10-30T22:33:42.529Z",
+  "commit": "5d94aa69ffa3ef9d379f516bc65258975eeaa199",
+  "dirty": false,
+  "network": "BNB Smart Chain testnet",
+  "chain": "eip155:97",
+  "stage": "free_testnet_funding",
+  "status": "stopped",
+  "code": "evm_rpc_delivery_unknown",
+  "transactionConfirmed": false,
+  "decisions": 0,
+  "executions": 0,
+  "broadcasts": 0,
+  "productionReady": false
+}

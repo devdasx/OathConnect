@@ -128,3 +128,10 @@ one-wei value and a fixed legacy fee ceiling. Seven targeted host tests cover
 network mismatch, snapshots, exact receipts, balance effects, finality/reorg
 contradictions and single-attempt signing. Internal AI review found no actionable
 issues. No funded BNB transfer has completed; this is fixture preparation only.
+
+A clean-source cancellation check stopped the unfunded BNB process before any
+approval, signature or submission, and verified removal of its temporary public
+funding directory. See [cancellation evidence](../evidence/bnb-testnet-cancellation.json).
+Network identity, fee and pre-existing recipient probes passed. The free funding
+sources checked were restricted or unavailable; see the dated
+[availability record](../evidence/bnb-testnet-funding-availability.json).

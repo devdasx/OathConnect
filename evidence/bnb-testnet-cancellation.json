@@ -1,0 +1,14 @@
+{
+  "checked": "2026-10-30T22:33:42.553Z",
+  "sourceCommit": "5d94aa69ffa3ef9d379f516bc65258975eeaa199",
+  "status": "passed",
+  "check": "SIGINT during the free-funding wait stops the process, preserves the stopped attempt and removes the temporary public funding directory",
+  "exitCode": 130,
+  "decisions": 0,
+  "signatures": 0,
+  "submissions": 0,
+  "temporaryFundingDirectoryRemoved": true,
+  "privateKeys": "Generated only in the terminated fixture process; never printed or written",
+  "transactionConfirmed": false,
+  "productionReady": false
+}
