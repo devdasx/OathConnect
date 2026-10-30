@@ -65,7 +65,9 @@ deployed relay at clean commit `dce6883578afdb8d91584a9f70b625b1b71bb3fa`, in
 slot 458656746, with one approval/signature/submission and a 5,000-lamport fee.
 See the [live testnet receipt](../../evidence/solana-testnet-live.json) and
 [free funding evidence](../../evidence/solana-testnet-funding.json). This is a
-different cluster from the local devnet transfer. The unfunded
+different cluster from the local devnet transfer. Its
+[read-only finality check](../../evidence/solana-testnet-live-finality.json)
+passed without another submission. The unfunded
 deployed-devnet process was stopped before pairing/signing when alternative funding
 was unavailable; see [attempt](../../evidence/solana-devnet-live.json). Deployed
 devnet testing, tokens/programs and a general-purpose Solana adapter remain open.

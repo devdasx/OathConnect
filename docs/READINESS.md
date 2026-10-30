@@ -99,6 +99,10 @@ the separate Solana **testnet** cluster at clean commit
 `dce6883578afdb8d91584a9f70b625b1b71bb3fa`, slot 458656746. It used one
 approval, one signature, one submission, a 5,000-lamport fee and the expected
 1,000,000-lamport recipient increase. See [receipt](../evidence/solana-testnet-live.json).
+The [read-only finality check](../evidence/solana-testnet-live-finality.json)
+verified the signature, fixed transaction and balance effects against the
+provider's finalized receipt and signature status. This is one provider's
+assertion, not independent consensus proof; the check made no submission.
 The local transfer above was on **devnet**; these results are not a matched pair
 on one cluster. Both faucets were free and all transaction keys remained in the
 fixture processes. The temporary server approval is disabled in this source.
