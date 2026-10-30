@@ -7,12 +7,13 @@
       "dapp"
     ],
     "origins": [
-      "https://validation.oathconnect.invalid"
+      "https://validation.oathconnect.invalid",
+      "https://oathconnect-preview.thuglifex.workers.dev"
     ],
     "keys": {
-      "disposable": "7-eougavIuZpxPZs8CjL2wwe7kt6183dW0TSlfEAjSY"
+      "disposable": "kGFL93_MFL_oxIzBqcMcf5RY93ULhAt0hP85VOa3l1E"
     },
-    "enabled": false,
-    "notAfter": 1793375152
+    "enabled": true,
+    "notAfter": 1793381575
   }
 ]

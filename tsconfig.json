@@ -6,6 +6,6 @@
     "noFallthroughCasesInSwitch": true, "noUnusedLocals": true, "noUnusedParameters": true,
     "skipLibCheck": true, "allowImportingTsExtensions": true, "noEmit": true
   },
-  "include": ["packages/**/*.ts", "tests/**/*.ts"],
+  "include": ["packages/**/*.ts", "tests/**/*.ts", "labs/browser-native/browser.ts"],
   "exclude": ["node_modules", "dist"]
 }

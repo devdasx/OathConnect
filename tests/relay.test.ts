@@ -1,7 +1,39 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {createIdentity, createPairing, joinPairing, random, unb64, text} from '@oathconnect/protocol';
+import {createIdentity, createPairing, createProof, joinPairing, random, unb64, text} from '@oathconnect/protocol';
 import {fixture} from './support/relay.ts';
+
+test('same-origin browser GET requires exact metadata, approved local-origin grant and proof',async()=>{
+  for(const local of [true,false]){
+    const f=await fixture({sameOrigin:local});
+    try {
+      const p=await createPairing(f.audience),identity=await createIdentity(),s=p.invitation.session;
+      const created=await f.raw(s,'dapp',identity,'PUT','',{pairExpires:p.invitation.expires});assert.equal(created.response.status,200);
+      const path=`/v1/sessions/${s}/peer`,token=created.token;
+      for(const [site,mode,origin,validProof,expected] of [
+        ['same-origin','cors',null,true,local?200:400],
+        ['same-site','cors',null,true,400],['cross-site','cors',null,true,400],['','cors',null,true,400],
+        ['same-origin','no-cors',null,true,400],['same-origin','cors','https://evil.example',true,400],
+        ['same-origin','cors',null,false,400]
+      ] as const){
+        const proof=validProof?await createProof(token,identity,'GET',path,''):'';
+        // Undici generates Sec-Fetch-Mode from RequestInit, as browsers do.
+        const r=await f.fetcher(f.audience+path,{mode,headers:{Authorization:'Oath '+token,'X-Oath-Proof':proof,'Sec-Fetch-Site':site,...(origin?{Origin:origin}:{})}});
+        assert.equal(r.status,expected,`${local}/${site}/${mode}/${origin}/${validProof}`);
+      }
+    } finally {await f.mf.dispose();}
+  }
+});
+test('fixture assets preserve status and restrict scripts, framing, referrers and caching',async()=>{
+  const f=await fixture({assets:true});
+  try {
+    const r=await f.fetcher(f.audience+'/interop/missing');assert.equal(r.status,404);assert.equal(await r.text(),'static fixture');
+    assert.match(r.headers.get('Content-Security-Policy')!,/script-src 'self'/);assert.match(r.headers.get('Content-Security-Policy')!,/frame-ancestors 'none'/);
+    assert.equal(r.headers.get('Referrer-Policy'),'no-referrer');assert.equal(r.headers.get('Cache-Control'),'no-store');assert.equal(r.headers.get('X-Content-Type-Options'),'nosniff');
+    assert.equal((await f.fetcher(f.audience+'/interop/',{method:'POST'})).status,404);
+    assert.equal((await f.fetcher(f.audience+'/v1/sessions/'+random()+'/peer')).status,400);
+  } finally {await f.mf.dispose();}
+});
 
 test('Cloudflare runtime: pairing, isolated encrypted delivery, ack and close', async () => {
   const f = await fixture();

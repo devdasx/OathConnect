@@ -2,7 +2,7 @@ import type {DurableObjectNamespace, DurableObjectState, RateLimit} from '@cloud
 import {fixed, integer, nowSeconds, opposite, parseJSON, ProtocolError, record, requireThat, validateFrame, verifyGrant, verifyProof, type Frame, type Grant, type Project, type Role} from '@oathconnect/protocol';
 import projects from '../../registry/projects.json';
 
-interface Env {SESSIONS: DurableObjectNamespace; PROJECTS: DurableObjectNamespace; PUBLIC_ORIGIN: string; RELEASE_SHA: string; MODE: string; IP_LIMIT: RateLimit; PROJECT_LIMIT: RateLimit}
+interface Env {SESSIONS: DurableObjectNamespace; PROJECTS: DurableObjectNamespace; ASSETS?: {fetch(request: Request): Promise<Response>}; PUBLIC_ORIGIN: string; RELEASE_SHA: string; MODE: string; IP_LIMIT: RateLimit; PROJECT_LIMIT: RateLimit}
 type Peer = {key: string; project: string; kid: string; issuer: string; origin: string};
 interface State {session: string; pairExpires: number; expires: number; closed: boolean; dapp: Peer; wallet?: Peer; hello?: unknown; sent: {dapp: number; wallet: number}; ack: {dapp: number; wallet: number}; count: number; nonces: Record<string, number>; window: number; requests: number}
 interface Internal {grant: Grant; verifiedPeer: Peer; nonce: string; proofAt: number; method: string; suffix: string; query: string; body: string}
@@ -42,6 +42,13 @@ export default {
     try {
       const url = new URL(request.url);
       requireThat(url.origin === env.PUBLIC_ORIGIN, 'wrong_audience');
+      if(url.pathname.startsWith('/interop/') && request.method==='GET' && env.ASSETS){
+        const asset=await env.ASSETS.fetch(request);
+        const secured=new Response(asset.body,{status:asset.status,headers:asset.headers});
+        secured.headers.set('Content-Security-Policy',"default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'");
+        secured.headers.set('Referrer-Policy','no-referrer');secured.headers.set('Cache-Control','no-store');secured.headers.set('X-Content-Type-Options','nosniff');
+        return secured;
+      }
       if (url.pathname === '/health' && request.method === 'GET') return json({service: 'OathConnect', protocol: 1, mode: env.MODE, productionReady: false, commit: env.RELEASE_SHA});
       if (url.pathname === '/v1/registry' && request.method === 'GET') return json({projects, commit: env.RELEASE_SHA});
       if (request.method === 'OPTIONS') return cors(new Response(null, {status: 204}), origin);
@@ -53,7 +60,11 @@ export default {
       const authorization = request.headers.get('Authorization') ?? '';
       requireThat(authorization.startsWith('Oath '), 'unauthorized');
       const token = authorization.slice(5);
-      const grant = await verifyGrant(token, projects as Project[], env.PUBLIC_ORIGIN, origin);
+      // Fetch omits Origin on same-origin GETs. Only browser same-origin metadata
+      // may select our own origin; never infer a foreign site's identity. A signed
+      // issuer grant AND proof of its bound key are still mandatory on every read.
+      const admissionOrigin = origin ?? (request.method === 'GET' && request.headers.get('Sec-Fetch-Site') === 'same-origin' && request.headers.get('Sec-Fetch-Mode') === 'cors' ? env.PUBLIC_ORIGIN : null);
+      const grant = await verifyGrant(token, projects as Project[], env.PUBLIC_ORIGIN, admissionOrigin);
       requireThat(grant.session === route[1], 'wrong_session');
       if (!(await env.PROJECT_LIMIT.limit({key: grant.project})).success) return cors(failure('rate_limited', 429), origin);
       const body = await boundedBody(request);

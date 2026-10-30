@@ -6,6 +6,7 @@
   "workers_dev": true,
   "preview_urls": false,
   "observability": {"enabled": false},
+  "assets": {"directory":"./dist/static","binding":"ASSETS","run_worker_first":true},
   "vars": {"PUBLIC_ORIGIN": "https://oathconnect-preview.thuglifex.workers.dev", "RELEASE_SHA": "local", "MODE": "preview"},
   "durable_objects": {"bindings": [{"name": "SESSIONS", "class_name": "RelaySession"}, {"name": "PROJECTS", "class_name": "ProjectQuota"}]},
   "migrations": [{"tag": "v1", "new_sqlite_classes": ["RelaySession"]}, {"tag": "v2", "new_sqlite_classes": ["ProjectQuota"]}],
