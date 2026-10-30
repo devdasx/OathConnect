@@ -1,0 +1,36 @@
+{
+  "checked": "2026-10-30T22:34:49.485486+00:00",
+  "network": "BNB Smart Chain testnet",
+  "purpose": "Free funding for a dedicated disposable qualification account",
+  "sources": [
+    {
+      "url": "https://www.bnbchain.org/en/testnet-faucet",
+      "status": "requires_mainnet_holdings",
+      "requirement": "0.002 BNB on BSC mainnet; no claim attempted"
+    },
+    {
+      "url": "https://faucet.chainstack.com/bnb-testnet-faucet",
+      "status": "requires_mainnet_holdings",
+      "requirement": "Published page requires 0.08 ETH and prior balance history on Ethereum mainnet; no API key or claim requested"
+    },
+    {
+      "url": "https://faucet.triangleplatform.com/bnbsmartchain/testnet",
+      "status": "service_suspended",
+      "observation": "Browser page displays service suspended; no claim attempted"
+    },
+    {
+      "url": "https://www.testnet.help/en/bscfaucet/testnet",
+      "status": "unavailable_during_check",
+      "observation": "Two browser navigation attempts aborted; web fetch timed out; no claim attempted"
+    },
+    {
+      "url": "https://gnfd-bsc-faucet.bnbchain.org/",
+      "status": "dns_unresolved",
+      "observation": "Browser reported host name resolution failure; no claim attempted"
+    }
+  ],
+  "fundsObtained": false,
+  "mainnetAssetsUsed": false,
+  "transactionConfirmed": false,
+  "productionReady": false
+}

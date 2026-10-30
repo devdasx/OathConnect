@@ -1,0 +1,16 @@
+{
+  "checked": "2026-10-30T22:35:18.635159+00:00",
+  "reviewedCommit": "5d94aa69ffa3ef9d379f516bc65258975eeaa199",
+  "scope": "Fixed BSC testnet lab, receipt/finality validation, cancellation and public-evidence preservation",
+  "review": "Internal AI review; not an independent human security audit",
+  "actionableFindings": 0,
+  "localChecks": {
+    "coreTestsPassed": 48,
+    "bnbHostTestsPassed": 7,
+    "entryPointSyntax": "passed",
+    "cancellation": "Clean-source process stopped before approval/signing/submission; public funding directory removed"
+  },
+  "reviewerChecks": "Five non-signing host tests and both entry-point syntax checks in the initial review; final committed-source inspection performed without signing or network actions",
+  "fundedTransactionQualified": false,
+  "productionReady": false
+}

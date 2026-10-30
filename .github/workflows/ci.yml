@@ -73,6 +73,7 @@ jobs:
       - run: node --check labs/evm/reconcile.mjs && node --test labs/evm/reconcile.test.mjs
       - run: npm ci --ignore-scripts --prefix labs/solana && npm audit --audit-level=low --prefix labs/solana
       - run: node --test labs/solana/*.test.mjs
+      - run: node --check labs/bnb/run.mjs && node --check labs/bnb/reconcile.mjs && node --test labs/bnb/*.test.mjs
       - run: npm audit --audit-level=low
       - run: npx --no-install wrangler deploy --dry-run
         env:
