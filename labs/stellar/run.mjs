@@ -25,11 +25,11 @@ try{
    if(decoded.source!==sender.publicKey()||decoded.fee!=='100'||decoded.signatures.length!==0||decoded.operations.length!==1||op.type!=='payment'||op.destination!==receiver.publicKey()||!op.asset.isNative()||op.amount!=='0.0000001'||decoded.memo.type!=='none')throw Error('transaction_review_rejected');
    return{requestDigest:await digest(canonical(request)),summary:'Send exactly one testnet stroop (0.0000001 XLM) to a newly generated disposable account, with a 100-stroop fee.',warnings:['Fixed testnet fixture, not a general-purpose Stellar signing adapter.']};
   },
-  async execute(request){
+  async execute(request,context){context.assertActive();
    stage='sign';
    if(++executions!==1||canonical(request.params)!==canonical({xdr:expected}))throw Error('test_policy_rejected');await network();
-   const transaction=TransactionBuilder.fromXDR(request.params.xdr,Networks.TESTNET);transaction.sign(sender);const hash=Buffer.from(transaction.hash()).toString('hex'); transactionHash=hash;
-   stage='submit'; broadcastAttempted=true;
+   context.assertActive();const transaction=TransactionBuilder.fromXDR(request.params.xdr,Networks.TESTNET);transaction.sign(sender);const hash=Buffer.from(transaction.hash()).toString('hex'); transactionHash=hash;
+   context.assertActive();stage='submit'; broadcastAttempted=true;
    let submitted; try {submitted=await server.submitTransaction(transaction,{skipMemoRequiredCheck:true});} catch(error) {adapterFailure={name:error?.constructor?.name,status:error?.response?.status,transactionCode:error?.response?.data?.extras?.result_codes?.transaction};throw error;}if(submitted.hash!==hash||submitted.successful!==true)throw Error('submission_not_confirmed');
    stage='receipt'; const receipt=await server.transactions().transaction(hash).call();if(receipt.hash!==hash||receipt.successful!==true||receipt.operation_count!==1||receipt.source_account!==sender.publicKey())throw Error('receipt_mismatch');
    stage='operations'; const operations=await server.operations().forTransaction(hash).call();const payment=operations.records[0];

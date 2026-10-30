@@ -3,8 +3,8 @@ import XCTest
 
 private actor FixtureAdapter: WalletAdapter {
     var executions = 0
-    func review(_ request: SigningRequest) async throws -> TransactionReview {TransactionReview(requestDigest: request.digest, summary: "Local test only", warnings: [])}
-    func execute(_ request: SigningRequest) async throws -> JSONValue {executions += 1; return .bool(true)}
+    func review(_ request: SigningRequest, context: ExecutionContext) async throws -> TransactionReview {try await context.checkActive(); return TransactionReview(requestDigest: request.digest, summary: "Local test only", warnings: [])}
+    func execute(_ request: SigningRequest, context: ExecutionContext) async throws -> JSONValue {try await context.checkActive(); executions += 1; return .bool(true)}
 }
 final class AuthorizationTests: XCTestCase {
     func request() throws -> Data {
@@ -13,7 +13,7 @@ final class AuthorizationTests: XCTestCase {
     func testApprovalAndReplay() async throws {
         let cap = try Capability(chain: "eip155:11155111", account: "test-account", methods: ["personal_sign"])
         let adapter = FixtureAdapter()
-        let authorizer = try WalletAuthorizer(capabilities: [cap], adapters: ["eip155:11155111/personal_sign":adapter]) {_, review in SigningApproval(approved: true, requestDigest: review.requestDigest)}
+        let authorizer = try WalletAuthorizer(capabilities: [cap], adapters: ["eip155:11155111/personal_sign":adapter]) {_, review, _ in SigningApproval(approved: true, requestDigest: review.requestDigest)}
         let data = try request(), result = try await authorizer.handle(data)
         XCTAssertEqual(result, .bool(true))
         do {_ = try await authorizer.handle(data); XCTFail("Duplicate executed")} catch {XCTAssertEqual(error as? OathConnectError, .replayOrGap)}
@@ -22,7 +22,7 @@ final class AuthorizationTests: XCTestCase {
     func testRejectedApprovalNeverExecutes() async throws {
         let cap = try Capability(chain: "eip155:11155111", account: "test-account", methods: ["personal_sign"])
         let adapter = FixtureAdapter()
-        let authorizer = try WalletAuthorizer(capabilities: [cap], adapters: ["eip155:11155111/personal_sign":adapter]) {_, _ in SigningApproval(approved: false, requestDigest: "")}
+        let authorizer = try WalletAuthorizer(capabilities: [cap], adapters: ["eip155:11155111/personal_sign":adapter]) {_, _, _ in SigningApproval(approved: false, requestDigest: "")}
         do {_ = try await authorizer.handle(request()); XCTFail("Rejection ignored")} catch {XCTAssertEqual(error as? OathConnectError, .invalidState)}
         let executions = await adapter.executions; XCTAssertEqual(executions, 0)
     }
@@ -36,7 +36,7 @@ final class AuthorizationTests: XCTestCase {
     func testCancellationDuringApprovalNeverExecutes() async throws {
         let cap = try Capability(chain: "eip155:11155111", account: "test-account", methods: ["personal_sign"])
         let adapter = FixtureAdapter()
-        let authorizer = try WalletAuthorizer(capabilities: [cap], adapters: ["eip155:11155111/personal_sign":adapter]) {_, review in
+        let authorizer = try WalletAuthorizer(capabilities: [cap], adapters: ["eip155:11155111/personal_sign":adapter]) {_, review, _ in
             withUnsafeCurrentTask { $0?.cancel() }
             return SigningApproval(approved: true, requestDigest: review.requestDigest)
         }

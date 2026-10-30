@@ -36,10 +36,13 @@ try {
       if (request.chain !== chain || request.account !== sender.address || canonical(request.params) !== expected || transaction.TransactionType !== 'Payment' || transaction.Destination !== receiver.address || transaction.Amount !== '1' || BigInt(transaction.Fee) > 100n) throw Error('test_policy_rejected');
       return {requestDigest: await digest(canonical(request)), summary: 'Send exactly 1 testnet drop between two newly generated disposable accounts; fee no more than 100 drops.', warnings: ['Testnet fixture. This adapter is not a general-purpose wallet signer.']};
     },
-    async execute(request) {
+    async execute(request, context) {
+      context.assertActive();
       if (++executions !== 1 || canonical(request.params) !== expected) throw Error('unexpected_execution');
       const current = await client.request({command: 'server_info'}); if (current.result.info.network_id !== 1) throw Error('network_mismatch');
+      context.assertActive();
       const signed = sender.sign(structuredClone(request.params));
+      context.assertActive();
       const result = await client.submitAndWait(signed.tx_blob);
       if (!result.result.validated || typeof result.result.meta !== 'object' || result.result.meta.TransactionResult !== 'tesSUCCESS') throw Error('transaction_not_confirmed');
       return {hash: signed.hash, ledger: result.result.ledger_index, result: result.result.meta.TransactionResult};

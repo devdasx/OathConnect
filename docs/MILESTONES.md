@@ -20,3 +20,12 @@ Unfinished milestones must not be labeled complete to justify a version tag.
 - `v0.2.0-alpha.3`: bounds approval by session expiry and honors native task cancellation before execution. Includes Stellar testnet evidence and the earlier attempt history. Internal targeted regression review passed 26 TypeScript and 14 Swift host tests; independent audit remains open.
 - `v0.2.0-alpha.4`: checks both integrators' current approval and pinned issuer on every relay operation, closes sessions on observed revocation, and drops their queued ciphertext. Includes the Sui local testnet receipt. Passed 28 TypeScript and 14 Swift host tests; independent audit remains open.
 - `v0.2.0-alpha.5`: real Chrome-to-Swift macOS interoperability through Cloudflare, same-origin browser polling support without relaxing signed admission, and live Stellar/Sui testnet receipts. Qualification fixtures and filtered evidence are public. Passed 30 TypeScript tests, 14 native SDK host tests, one native fixture host test and three JavaScript evidence/file tests. No Oath Wallet integration, iOS runtime test, independent audit or production certification.
+
+## Current 0.3 preview work
+
+Restricted EVM transaction validation and verified signing are implemented, with
+cooperative execution contexts in both SDKs. Local validation passed 44 TypeScript
+tests, 15 native SDK host tests, one native fixture host test, three JavaScript
+fixture tests and generic iOS compilation. Live Sepolia funding/qualification,
+other networks, general transaction coverage and independent review remain open.
+The release must retain development-preview status.

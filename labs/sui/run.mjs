@@ -80,12 +80,13 @@ try {
       reviewBytes(request.params.transaction);
       return {requestDigest:await digest(canonical(request)),summary:'Send exactly one testnet MIST to a disposable account; maximum gas budget 0.01 testnet SUI.',warnings:['Fixed test fixture; not a general-purpose Sui signer.']};
     },
-    async execute(request) {
+    async execute(request, context) {
+      context.assertActive();
       try {
         stage = 'sign'; if (++executions !== 1) fail('repeated_execution'); reviewBytes(request.params.transaction); await network();
-        const signed = await sender.signTransaction(bytes);
-        stage = 'submit'; broadcastAttempted = true;
-        const submitted = await client.executeTransaction({transaction:bytes,signatures:[signed.signature],signal:signal()});
+        context.assertActive();const signed = await sender.signTransaction(bytes);
+        context.assertActive();stage = 'submit'; broadcastAttempted = true;
+        const submitted = await client.executeTransaction({transaction:bytes,signatures:[signed.signature],signal:AbortSignal.any([context.signal,signal()])});
         if (submitted.$kind !== 'Transaction' || !submitted.Transaction.status.success || submitted.Transaction.digest !== transactionHash) fail('submission_unconfirmed');
         stage = 'receipt';
         const result = await client.waitForTransaction({digest:transactionHash,include:{balanceChanges:true,transaction:true},timeout:30000,signal:AbortSignal.timeout(35000)});

@@ -1,6 +1,6 @@
 {
   "name": "@oathconnect/thorchain",
-  "version": "0.2.0-alpha.5",
+  "version": "0.3.0-alpha.1",
   "type": "module",
   "license": "MIT",
   "description": "Bounded THORChain discovery and quote-review example for OathConnect",
@@ -16,7 +16,7 @@
   ],
   "sideEffects": false,
   "dependencies": {
-    "@oathconnect/protocol": "0.2.0-alpha.5"
+    "@oathconnect/protocol": "0.3.0-alpha.1"
   },
   "repository": {
     "type": "git",
