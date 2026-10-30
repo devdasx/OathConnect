@@ -56,3 +56,24 @@ test('global integrator allocation budget stops the 101st session', async () => 
     }
   } finally {await f.mf.dispose();}
 });
+
+test('relay restart preserves encrypted mailboxes, replay protection and closure tombstones', async () => {
+  const {mkdtemp, rm} = await import('node:fs/promises'); const {tmpdir} = await import('node:os'); const {join} = await import('node:path');
+  const directory = await mkdtemp(join(tmpdir(), 'oathconnect-restart-')); const f = await fixture({persist: directory});
+  try {
+    const p = await createPairing(f.audience), session = p.invitation.session, dId = await createIdentity(), wId = await createIdentity();
+    await f.raw(session, 'dapp', dId, 'PUT', '', {pairExpires: p.invitation.expires});
+    const joined = await joinPairing(p.uri, f.audience); await f.raw(session, 'wallet', wId, 'PUT', '/peer', joined.hello);
+    const channel = await p.accept(joined.hello), frame = await channel.seal({survives: 'relay restart'});
+    await f.raw(session, 'dapp', dId, 'POST', '/messages', frame);
+    const original = await f.raw(session, 'wallet', wId, 'GET', '/messages?after=0');
+    await f.restart();
+    const replay = await f.raw(session, 'wallet', wId, 'GET', '/messages?after=0', undefined, original);
+    assert.equal(replay.body.error, 'replayed_proof');
+    const read = await f.raw(session, 'wallet', wId, 'GET', '/messages?after=0');
+    assert.deepEqual((read.body.messages as unknown[])[0], frame);
+    await f.raw(session, 'dapp', dId, 'DELETE'); await f.restart();
+    assert.equal((await f.raw(session, 'wallet', wId, 'GET', '/messages?after=0')).body.error, 'session_closed');
+    assert.equal((await f.raw(session, 'dapp', dId, 'PUT', '', {pairExpires: p.invitation.expires})).body.error, 'session_exists');
+  } finally {await f.mf.dispose(); await rm(directory, {recursive: true, force: true});}
+});

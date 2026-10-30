@@ -8,6 +8,27 @@ concurrency:
   group: verify-${{ github.ref }}
   cancel-in-progress: true
 jobs:
+  security:
+    name: Security analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      actions: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: github/codeql-action/init@793b778da9c9275a0f276522b27cb5fc14bba279
+        with:
+          languages: javascript-typescript
+          build-mode: none
+          queries: security-extended
+      - uses: github/codeql-action/analyze@793b778da9c9275a0f276522b27cb5fc14bba279
+        with:
+          output: analysis-results
+      - run: node scripts/check-sarif.mjs analysis-results
   swift:
     name: Swift host interoperability
     runs-on: macos-15

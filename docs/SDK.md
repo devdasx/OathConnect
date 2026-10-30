@@ -27,3 +27,7 @@ The minimal SDK polls every two seconds with bounded mailboxes. Push notificatio
 ## Verified peer identity
 
 Both peers sign their encrypted negotiation messages with their per-session admission proof keys. Verify the issuer against a separately trusted registry before displaying a verified integrator identity. Never auto-trust keys fetched solely from the relay being authenticated. Applications must update/revoke their pinned registries through an authenticated distribution channel. Project names come from that registry; exact website origins come from signed grants. Admission approval is not a promise that the website is safe.
+
+## Installing preview archives
+
+Download all three `.tgz` files from the same GitHub prerelease and verify their SHA-256 checksums. Install the protocol and SDK archives together (`npm install ./oathconnect-protocol-<version>.tgz ./oathconnect-sdk-<version>.tgz`); include the THORChain archive only if using its read-only example. These previews are supplied as GitHub release artifacts, not claimed to be published in the npm registry. Swift clients add this repository as a Swift package pinned to a release tag or exact commit.

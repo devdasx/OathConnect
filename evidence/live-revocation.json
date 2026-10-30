@@ -1,0 +1,10 @@
+{
+  "checkedAt": "2026-10-30T14:51:27.130Z",
+  "transport": "deployed Cloudflare relay",
+  "deployedCommit": "f2c089a9d42a70ebc64ef63373e7b61ad239d780",
+  "beforeStatus": 200,
+  "afterStatus": 400,
+  "afterCode": "project_not_approved",
+  "grantStillWithinOriginalLifetime": true,
+  "status": "passed"
+}
