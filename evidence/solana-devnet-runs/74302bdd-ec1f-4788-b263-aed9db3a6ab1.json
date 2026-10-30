@@ -1,0 +1,11 @@
+{
+  "started": "2026-10-30T14:47:56.720Z",
+  "completed": "2026-10-30T14:47:57.184Z",
+  "network": "Solana devnet",
+  "chain": "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1",
+  "stage": "free_testnet_funding",
+  "status": "blocked_or_failed",
+  "transactionConfirmed": false,
+  "code": "http_410",
+  "thorchainSwap": false
+}

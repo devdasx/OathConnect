@@ -1,0 +1,8 @@
+{
+  "name": "oathconnect-solana-qualification",
+  "private": true,
+  "type": "module",
+  "devDependencies": {
+    "@solana/web3.js": "3.1.1"
+  }
+}
