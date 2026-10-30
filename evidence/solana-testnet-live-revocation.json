@@ -1,0 +1,15 @@
+{
+  "checkedAt": "2026-10-30T22:19:12.482Z",
+  "transport": "deployed Cloudflare relay",
+  "deployedCommit": "9cf339942df6859b1092ac5db1cc6c76bdc1aefa",
+  "beforeStatus": 200,
+  "afterStatus": 400,
+  "afterCode": "project_not_approved",
+  "grantStillWithinOriginalLifetime": true,
+  "projectStillWithinOriginalLifetime": true,
+  "freshGrantStatus": 400,
+  "activeApprovedProjects": 0,
+  "privateIssuerRemoved": true,
+  "status": "passed",
+  "productionReady": false
+}

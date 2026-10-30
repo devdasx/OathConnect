@@ -70,3 +70,8 @@ a mainnet mode. It also carries the earlier deployed Sepolia evidence and
 finality-consistency repair. Package versions advance together; this milestone
 does not add a reusable production Solana adapter. Other chains, broader methods,
 THORChain swaps, operational qualification and independent audit remain open.
+
+The temporary server approval was revoked through GitHub deployment. A previously
+admitted, unexpired grant and a fresh grant were both denied, and the disposable
+issuer file was removed. The [dated evidence](../evidence/solana-testnet-live-revocation.json)
+retains the exact deployment identity.
