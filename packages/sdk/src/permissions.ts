@@ -56,20 +56,26 @@ export class WalletAuthorizer {
     this.#capabilities = deepFreeze(validateCapabilities(capabilities)) as Capability[];
   }
   close() { this.#closed = true; }
-  async handle(value: unknown, now = nowSeconds()): Promise<unknown> {
+  /** Session supplies its expiry; a pending approval cannot extend that lifetime. */
+  async handle(value: unknown, now = nowSeconds(), sessionExpires = Number.MAX_SAFE_INTEGER): Promise<unknown> {
     requireThat(!this.#closed && !this.#busy, 'wallet_unavailable');
     const request = validateRequest(value, this.#capabilities, now);
+    integer(sessionExpires, 0, Number.MAX_SAFE_INTEGER);
+    const deadline = Math.min(request.expires, sessionExpires);
+    const assertActive = () => requireThat(!this.#closed && nowSeconds() < deadline, 'request_expired');
+    assertActive();
     requireThat(!this.#seen.has(request.id) && this.#seen.size < 1024, 'duplicate_or_exhausted_request');
     this.#seen.add(request.id); this.#busy = true;
     try {
       const adapter = this.adapters.get(`${request.chain}/${request.method}`); requireThat(adapter, 'unsupported_method');
       const requestDigest = await digest(canonical(request));
+      assertActive();
       const review = await adapter.review(request);
       record(review, ['requestDigest', 'summary', 'warnings']);
       requireThat(review.requestDigest === requestDigest && typeof review.summary === 'string' && review.summary.length > 0 && review.summary.length <= 4000 && Array.isArray(review.warnings) && review.warnings.length <= 20 && review.warnings.every(w => typeof w === 'string' && w.length <= 500), 'invalid_review');
-      requireThat(!this.#closed && nowSeconds() < request.expires, 'request_expired');
+      assertActive();
       const approval = await this.approve(request, deepFreeze(parseJSON(canonical(review))) as Review);
-      requireThat(!this.#closed && nowSeconds() < request.expires, 'request_expired');
+      assertActive();
       requireThat(approval.approved === true && approval.requestDigest === requestDigest, 'user_rejected');
       const result = await adapter.execute(request);
       requireThat(utf8(canonical(result)).length <= 22_000, 'result_too_large'); return result;

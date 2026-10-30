@@ -6,4 +6,6 @@ Host tests verify shared public TypeScript-generated fixtures for the pairing MA
 
 The Swift package exposes transport/cryptography primitives and an actor-isolated authorization gate that binds a local approval to the exact canonical request digest. WalletSession provides signed peer verification, wallet-selected capability negotiation, explicit approval callbacks, one-request execution and shutdown. The wallet application must supply its own trusted project registry, short-lived grant callback, chain transaction decoders and approval UI. Transport injection is available for host testing. This native package is therefore not a drop-in production wallet SDK.
 
+WalletSession passes its expiry into the authorizer; standalone callers supply `sessionExpires` themselves. Authorization checks task cancellation before review and again after review and approval. Signing adapters must also check cancellation and wallet lock state immediately before using a key. Cancellation cannot retract a signature or transaction already produced or broadcast.
+
 Run `swift test`. On filesystems that generate AppleDouble sidecars, use a local APFS scratch directory, for example `swift test --scratch-path /tmp/oathconnect-swift-build`, to avoid code-signing resource-sidecar errors. This is a host test, not an iOS runtime test.

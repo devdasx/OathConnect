@@ -113,17 +113,23 @@ public actor WalletAuthorizer {
         self.capabilities = capabilities; self.adapters = adapters; self.approve = approve
     }
     public func close() {closed = true}
-    public func handle(_ data: Data) async throws -> JSONValue {
+    /// A pending approval cannot extend the owning session's expiry.
+    public func handle(_ data: Data, sessionExpires: Int? = nil) async throws -> JSONValue {
+        try Task.checkCancellation()
         try check(!closed && !busy, .invalidState)
         let request = try SigningRequest(data: data, capabilities: capabilities)
+        let deadline = min(request.expires, sessionExpires ?? Int.max)
+        try check(timestamp() < deadline, .expired)
         try check(seen.count < 1024 && !seen.contains(request.id), .replayOrGap)
         seen.insert(request.id); busy = true; defer {busy = false}
         guard let adapter = adapters[request.chain + "/" + request.method] else {throw OathConnectError.invalidState}
         let review = try await adapter.review(request)
+        try Task.checkCancellation()
         try check(review.requestDigest == request.digest && !review.summary.isEmpty && review.summary.count <= 4000 && review.warnings.count <= 20 && review.warnings.allSatisfy {$0.count <= 500})
-        try check(!closed && timestamp() < request.expires, .expired)
+        try check(!closed && timestamp() < deadline, .expired)
         let approval = try await approve(request, review)
-        try check(!closed && timestamp() < request.expires, .expired)
+        try Task.checkCancellation()
+        try check(!closed && timestamp() < deadline, .expired)
         try check(approval.approved && approval.requestDigest == request.digest, .invalidState)
         let result = try await adapter.execute(request)
         try check(result.canonical().count <= 22_000, .tooLarge); return result

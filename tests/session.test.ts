@@ -60,3 +60,21 @@ test('request IDs stay consumed when the application replaces its authorizer', a
     assert.deepEqual(p.counts(),{executions:1,prompts:1});
   } finally {await p.f.mf.dispose();}
 });
+
+test('session expiry while approval is pending prevents execution', async t => {
+  const p = await pairedFixture();
+  try {
+    t.mock.timers.enable({apis:['Date'],now:(p.channel.expires-10)*1000});
+    let executions = 0, prompts = 0;
+    const authorizer = new WalletAuthorizer([p.cap],new Map([[p.cap.chain+'/personal_sign',{
+      async review(r) {return {requestDigest:await digest(canonical(r)),summary:'Test-only action',warnings:[]};},
+      async execute() {executions++;return null;}
+    }]]),async(_,review)=>{prompts++;t.mock.timers.setTime(p.channel.expires*1000);return {approved:true,requestDigest:review.requestDigest};});
+    const {newRequest} = await import('@oathconnect/sdk');
+    // Control only delivery after real negotiation: the worker has its own clock.
+    const frame = await p.channel.seal(newRequest(p.cap,'personal_sign',['fixture']));
+    p.wc.receive = async()=>[frame]; p.wc.acknowledge = async()=>({});
+    await assert.rejects(p.w.serveOnce(authorizer));
+    assert.equal(prompts,1);assert.equal(executions,0);
+  } finally {t.mock.timers.reset();await p.f.mf.dispose();}
+});

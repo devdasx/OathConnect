@@ -1,0 +1,38 @@
+{
+  "baselineCommit": "b0f31f9c6acb7f6df167f0d6a92dd8ca27df7e2e",
+  "scope": "Targeted lifetime/cancellation review and regressions by the implementation agent; not an independent or completed protocol audit",
+  "findings": [
+    {
+      "id": "OC-2026-004",
+      "boundary": "TypeScript and native approval lifetime",
+      "before": "A request approved after its session expired still dispatched one execution in both regression fixtures. The request itself had not expired, and an affirmative approval was still required.",
+      "repair": "Pass the owning session expiry into authorization and check the earlier of the session and request deadlines before review, approval and execution.",
+      "after": "Both regressions finish with zero executions."
+    },
+    {
+      "id": "OC-2026-005",
+      "boundary": "Native task cancellation during approval",
+      "before": "A task cancelled while awaiting approval still dispatched one execution in the regression fixture.",
+      "repair": "Check cooperative task cancellation at authorizer entry and after review/approval, and before further session transport work.",
+      "after": "CancellationError is propagated by the standalone authorizer; zero executions."
+    }
+  ],
+  "checks": {
+    "typescript": {
+      "tests": 26,
+      "failed": 0
+    },
+    "swiftHost": {
+      "tests": 14,
+      "failed": 0
+    },
+    "genericIOSBuild": "passed",
+    "simulator": "not run",
+    "physicalDevice": "not run"
+  },
+  "limits": [
+    "An execution already dispatched to an adapter cannot be retracted by the transport. Adapters must check wallet lock/cancellation before accessing keys and handle ambiguous broadcasts without automatic retry."
+  ],
+  "productionReady": false,
+  "independentAuditCompleted": false
+}

@@ -38,6 +38,7 @@ export class Session {
       await this.#send({...proposal, identity: await this.relay.attest(proposal)});
       const response = await this.#receive(nowSeconds() + 120); record(response, ['type', 'capabilities', 'identity']); requireThat(response.type === 'approved');
       this.#peer = await this.relay.identify({type: response.type, capabilities: response.capabilities}, response.identity, this.#projects, 'wallet');
+      this.#assertOpen();
       const approved = validateCapabilities(response.capabilities);
       requireThat(isSubset(approved, requested), 'permission_escalation');
       this.#capabilities = approved; return structuredClone(approved);
@@ -76,7 +77,7 @@ export class Session {
       this.#seenRequests.add(checked.id);
       this.#activeAuthorizer = authorizer;
       let result: unknown = null; let error: string | null = null;
-      try { result = await authorizer.handle(checked); } catch { error = 'rejected'; }
+      try { result = await authorizer.handle(checked, nowSeconds(), this.channel.expires); } catch { error = 'rejected'; }
       finally { this.#activeAuthorizer = undefined; }
       await this.#send({type: 'response', id: checked.id, result, error});
     });

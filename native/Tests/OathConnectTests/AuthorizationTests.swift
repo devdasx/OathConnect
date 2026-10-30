@@ -33,4 +33,16 @@ final class AuthorizationTests: XCTestCase {
         XCTAssertThrowsError(try JSONValue.parse(Data((String(repeating: "[", count: 25) + "0" + String(repeating: "]", count: 25)).utf8)))
         XCTAssertThrowsError(try JSONValue.parse(Data("1.5".utf8)))
     }
+    func testCancellationDuringApprovalNeverExecutes() async throws {
+        let cap = try Capability(chain: "eip155:11155111", account: "test-account", methods: ["personal_sign"])
+        let adapter = FixtureAdapter()
+        let authorizer = try WalletAuthorizer(capabilities: [cap], adapters: ["eip155:11155111/personal_sign":adapter]) {_, review in
+            withUnsafeCurrentTask { $0?.cancel() }
+            return SigningApproval(approved: true, requestDigest: review.requestDigest)
+        }
+        let data = try request()
+        let task = Task {try await authorizer.handle(data)}
+        do {_ = try await task.value; XCTFail("Cancelled approval executed")} catch {XCTAssertTrue(error is CancellationError)}
+        let executions = await adapter.executions; XCTAssertEqual(executions, 0)
+    }
 }
