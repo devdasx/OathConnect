@@ -18,7 +18,9 @@ export async function reconcileReceipt(expected,readers) {
     check(quantity(finalized?.number)&&hash(finalized?.hash),'evm_reconciliation_invalid_finalized_block');
     const block=await rpc.request('eth_getBlockByNumber',[receipt.blockNumber,false],signal);
     check(block?.number===receipt.blockNumber&&block.hash===expected.blockHash,'evm_reconciliation_canonical_mismatch');
-    return {endpoint,status:receipt.status,hash:receipt.transactionHash,block:expected.block,canonicalBlockHash:block.hash,finalizedHeight:BigInt(finalized.number).toString(),finalizedBlockHash:finalized.hash,withinReportedFinalizedHeight:BigInt(finalized.number)>=BigInt(receipt.blockNumber)};
+    const finalizedCanonical=await rpc.request('eth_getBlockByNumber',[finalized.number,false],signal);
+    check(finalizedCanonical?.number===finalized.number && finalizedCanonical.hash===finalized.hash && (finalized.number!==receipt.blockNumber || finalized.hash===receipt.blockHash),'evm_reconciliation_finalized_mismatch');
+    return {endpoint,status:receipt.status,hash:receipt.transactionHash,block:expected.block,canonicalBlockHash:block.hash,finalizedHeight:BigInt(finalized.number).toString(),finalizedBlockHash:finalized.hash,finalizedCanonicalBlockHash:finalizedCanonical.hash,withinReportedFinalizedHeight:BigInt(finalized.number)>=BigInt(receipt.blockNumber)};
   }));
   return {checked:new Date().toISOString(),hash:expected.hash,scope:'Read-only cross-provider receipt/canonical-block and finalized-height checks; RPC assertions, not an independently verified consensus proof',readings,transactionConfirmed:true,finalizedByBothProviders:readings.every(r=>r.withinReportedFinalizedHeight),productionReady:false};
 }

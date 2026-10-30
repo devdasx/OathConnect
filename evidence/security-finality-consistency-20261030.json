@@ -1,0 +1,22 @@
+{
+  "baselineCommit": "4e1581732e0eca4875732cbc3d092dc8d15d58f7",
+  "scope": "Internal review of the read-only evidence checker; not a transaction-signing vulnerability or independent external audit",
+  "finding": "Finalized heights were compared with the receipt block without checking that the finalized hashes matched canonical blocks at those heights. Contradictory RPC responses could produce a false provider-reported finality assertion.",
+  "reproduction": {
+    "environment": "Mocked readers only; no network or signing",
+    "receiptAndCanonicalBlock": "height 100, hash B",
+    "bothReportedFinalizedBlocks": "height 100, hash C",
+    "beforeFix": "finalizedByBothProviders=true; expected rejection missing"
+  },
+  "repair": "Read the canonical block at each reported finalized height and require matching number/hash. If the finalized height equals the receipt height, also require the receipt block hash.",
+  "validation": {
+    "reconciliationTests": 5,
+    "failures": 0,
+    "contradictorySameHeight": "rejected",
+    "contradictoryDifferentHeight": "rejected",
+    "consistentSameHeight": "accepted",
+    "laggingProvider": "confirmation retained, finality false"
+  },
+  "limits": "This checks consistency of provider assertions, not consensus or every ancestor header. It cannot establish honesty of colluding RPC providers.",
+  "productionReady": false
+}

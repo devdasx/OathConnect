@@ -44,7 +44,7 @@ the deployed relay at `8c06a27cf1167993428b0728237260ac53aab0fc`, in Sepolia
 block 12028584, with one approval/signature/submission and the expected receipt,
 log and balance delta. See [live receipt](../evidence/evm-sepolia-live.json).
 The disposable registry approval is disabled in source after this test.
-The read-only reconciliation command and three adversarial tests make the
+The read-only reconciliation command and five adversarial tests make the
 provider receipt/canonical-block/finalized-height checks reproducible. They do
 not verify consensus independently. Token calls, other EVM networks, THORChain
 swaps, external audit and production qualification remain open.
