@@ -1,0 +1,22 @@
+{
+  "v": 1,
+  "completed": "2026-10-30T16:45:02.959Z",
+  "status": "passed",
+  "deployedCommit": "bb364c53b10e8099c7397e5087f2a8a822e9b2fe",
+  "relay": "https://oathconnect-preview.thuglifex.workers.dev",
+  "browser": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+  "native": "Version 27.0 (Build 26A428)",
+  "requestKind": "fixed echo; no blockchain signing",
+  "checks": [
+    "P-256 ECDH + QR-secret authentication across WebCrypto/CryptoKit",
+    "Both peer identities verified against separately bundled public registry",
+    "Wallet-selected exact capability; one digest-bound approval and one execution",
+    "Unicode encrypted request/reply and explicit browser close"
+  ],
+  "approvals": 1,
+  "executions": 1,
+  "limitations": [
+    "Standalone macOS host, not Oath Wallet or iOS runtime",
+    "No blockchain signing, mainnet transaction, independent audit or production certification"
+  ]
+}

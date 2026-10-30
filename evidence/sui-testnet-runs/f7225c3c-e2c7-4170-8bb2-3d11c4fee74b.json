@@ -1,0 +1,20 @@
+{
+  "started": "2026-10-30T16:44:39.066Z",
+  "completed": "2026-10-30T16:44:52.635Z",
+  "network": "Sui Testnet",
+  "chain": "sui:testnet",
+  "genesis": "69WiPg3DAQiwdxfncX6wYQ2siKwAe6L9BZthQea3JNMD",
+  "transport": "deployed Cloudflare relay",
+  "status": "confirmed",
+  "transactionConfirmed": true,
+  "checkpoint": "400956792",
+  "hash": "D619DiB4dLvMUx5a3MD5pyw8zNvrVbQwuKPgofic9E3Q",
+  "decisions": 1,
+  "executions": 1,
+  "faucetDigest": "84ERuk5zJuSmxKSZZinHva4tkepnbSfbKoUpo65YbKqp",
+  "faucetAmountMist": "1000000000",
+  "operation": "One MIST address-balance transfer; gas budget capped at 10000000 MIST",
+  "thorchainSwap": false,
+  "harnessSHA256": "9ff90d30d0cd77a773547f8c58809cd5f51dd7796a39a99575860470b688c93f",
+  "sdkVersion": "@mysten/sui@2.38.0"
+}
