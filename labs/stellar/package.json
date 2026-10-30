@@ -1,0 +1,1 @@
+{"name":"oathconnect-stellar-testnet-lab","private":true,"type":"module","license":"MIT","dependencies":{"@stellar/stellar-sdk":"17.4.0"}}

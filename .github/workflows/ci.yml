@@ -8,6 +8,20 @@ concurrency:
   group: verify-${{ github.ref }}
   cancel-in-progress: true
 jobs:
+  labs:
+    name: Testnet lab dependencies
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: '24'
+      - run: npm ci --ignore-scripts --prefix labs/xrpl && npm audit --audit-level=low --prefix labs/xrpl
+      - run: npm ci --ignore-scripts --prefix labs/stellar && npm audit --audit-level=low --prefix labs/stellar
+      - run: node --check labs/xrpl/run.mjs && node --check labs/stellar/run.mjs && node --check labs/solana/run.mjs
   security:
     name: Security analysis
     runs-on: ubuntu-24.04
