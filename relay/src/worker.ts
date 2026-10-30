@@ -1,13 +1,23 @@
 import type {DurableObjectNamespace, DurableObjectState, RateLimit} from '@cloudflare/workers-types';
-import {fixed, integer, nowSeconds, opposite, parseJSON, ProtocolError, record, requireThat, validateFrame, verifyGrant, verifyProof, type Frame, type Grant, type Project} from '@oathconnect/protocol';
+import {fixed, integer, nowSeconds, opposite, parseJSON, ProtocolError, record, requireThat, validateFrame, verifyGrant, verifyProof, type Frame, type Grant, type Project, type Role} from '@oathconnect/protocol';
 import projects from '../../registry/projects.json';
 
 interface Env {SESSIONS: DurableObjectNamespace; PROJECTS: DurableObjectNamespace; PUBLIC_ORIGIN: string; RELEASE_SHA: string; MODE: string; IP_LIMIT: RateLimit; PROJECT_LIMIT: RateLimit}
-type Peer = {key: string; project: string; kid: string};
+type Peer = {key: string; project: string; kid: string; issuer: string; origin: string};
 interface State {session: string; pairExpires: number; expires: number; closed: boolean; dapp: Peer; wallet?: Peer; hello?: unknown; sent: {dapp: number; wallet: number}; ack: {dapp: number; wallet: number}; count: number; nonces: Record<string, number>; window: number; requests: number}
-interface Internal {grant: Grant; nonce: string; proofAt: number; method: string; suffix: string; query: string; body: string}
+interface Internal {grant: Grant; verifiedPeer: Peer; nonce: string; proofAt: number; method: string; suffix: string; query: string; body: string}
 const json = (value: unknown, status = 200) => new Response(JSON.stringify(value), {status, headers: {'Content-Type': 'application/json', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer'}});
 const failure = (code: string, status = 400) => json({error: code}, status);
+function pinPeer(grant: Grant): Peer {
+  const project = (projects as Project[]).find(p=>p.id===grant.project)!;
+  return {key:grant.clientKey,project:grant.project,kid:grant.kid,issuer:project.keys[grant.kid]!,origin:grant.origin};
+}
+function peerApproved(peer: Peer, role: Role, now: number): boolean {
+  const project = (projects as Project[]).find(p=>p.id===peer.project);
+  return !!project?.enabled && project.roles.includes(role) && (project.notAfter===undefined || now<project.notAfter)
+    && typeof peer.issuer==='string' && Object.hasOwn(project.keys,peer.kid) && project.keys[peer.kid]===peer.issuer
+    && (peer.origin==='' ? role==='wallet' : project.origins.includes(peer.origin));
+}
 async function boundedBody(request: Request): Promise<string> {
   if (request.headers.has('content-encoding')) throw new ProtocolError('unsupported_encoding');
   if (!request.body) return '';
@@ -52,7 +62,7 @@ export default {
       const allocation = await quota.fetch('https://internal/', {method: 'POST', body: JSON.stringify({session: grant.session, create: request.method === 'PUT' && !route[2]})});
       if (!allocation.ok) return cors(failure('project_capacity', 429), origin);
       const object = env.SESSIONS.get(env.SESSIONS.idFromName(grant.session));
-      const response = await object.fetch('https://internal/', {method: 'POST', body: JSON.stringify({grant, nonce: proof.nonce, proofAt: proof.at, method: request.method, suffix: route[2] ?? '', query: url.search, body} satisfies Internal)});
+      const response = await object.fetch('https://internal/', {method: 'POST', body: JSON.stringify({grant, verifiedPeer:pinPeer(grant), nonce: proof.nonce, proofAt: proof.at, method: request.method, suffix: route[2] ?? '', query: url.search, body} satisfies Internal)});
       return cors(new Response(await response.text(), {status: response.status, headers: [...response.headers]}), origin);
     } catch (error) {
       // Deliberately excludes request paths, bodies, tokens, accounts and arbitrary error strings.
@@ -69,15 +79,24 @@ export class RelaySession {
     try {
       const result = await this.ctx.storage.transaction(async txn => {
         let state = await txn.get<State>('state'); const g = input.grant;
+        // Carry the issuer that actually verified this request across the internal
+        // boundary; a deployment may update Worker/DO registry snapshots separately.
+        requireThat(input.verifiedPeer && peerApproved(input.verifiedPeer,g.role,now),'peer_not_approved');
         if (!state) {
           requireThat(input.method === 'PUT' && input.suffix === '' && g.role === 'dapp' && input.query === '', 'session_not_found');
           const body = parseJSON(input.body, 1024); record(body, ['pairExpires']); integer(body.pairExpires, now + 1, now + 300);
-          state = {session: g.session, pairExpires: body.pairExpires, expires: body.pairExpires + 3300, closed: false, dapp: {key: g.clientKey, project: g.project, kid: g.kid}, sent: {dapp: 0, wallet: 0}, ack: {dapp: 0, wallet: 0}, count: 0, nonces: {}, window: now, requests: 0};
+          state = {session: g.session, pairExpires: body.pairExpires, expires: body.pairExpires + 3300, closed: false, dapp: input.verifiedPeer, sent: {dapp: 0, wallet: 0}, ack: {dapp: 0, wallet: 0}, count: 0, nonces: {}, window: now, requests: 0};
           await txn.setAlarm(state.expires * 1000);
         } else requireThat(!(input.method === 'PUT' && input.suffix === ''), 'session_exists');
         requireThat(!state.closed && state.expires > now && g.expires > now, 'session_closed');
+        if (!peerApproved(state.dapp,'dapp',now) || state.wallet && !peerApproved(state.wallet,'wallet',now)) {
+          state.closed=true;delete state.hello;
+          const messages=await txn.list({prefix:'message:'});for(const key of messages.keys())await txn.delete(key);
+          await txn.put('state',state);
+          return {status:409,value:{error:'peer_not_approved'}};
+        }
         const peer = state[g.role];
-        if (peer) requireThat(peer.key === g.clientKey && peer.project === g.project && peer.kid === g.kid, 'peer_mismatch');
+        if (peer) requireThat(peer.key === g.clientKey && peer.project === g.project && peer.kid === g.kid && peer.origin === g.origin, 'peer_mismatch');
         else requireThat(g.role === 'wallet' && input.method === 'PUT' && input.suffix === '/peer' && now < state.pairExpires, 'not_paired');
         state.nonces = Object.fromEntries(Object.entries(state.nonces).filter(([, expiry]) => expiry >= now));
         requireThat(!Object.hasOwn(state.nonces, input.nonce), 'replayed_proof');
@@ -92,7 +111,7 @@ export class RelaySession {
         } else if (input.method === 'PUT' && input.suffix === '/peer' && input.query === '') {
           requireThat(g.role === 'wallet' && !state.wallet && now < state.pairExpires, 'already_paired');
           record(payload, ['v', 'session', 'publicKey', 'mac']); requireThat(payload.v === 1 && payload.session === state.session); fixed(payload.publicKey, 65); fixed(payload.mac, 32);
-          state.wallet = {key: g.clientKey, project: g.project, kid: g.kid}; state.hello = payload;
+          state.wallet = input.verifiedPeer; state.hello = payload;
         } else if (input.method === 'GET' && input.suffix === '/peer' && input.query === '' && !input.body) {
           requireThat(g.role === 'dapp'); result = {hello: state.hello ?? null};
         } else if (input.method === 'POST' && input.suffix === '/messages' && input.query === '') {
@@ -116,9 +135,9 @@ export class RelaySession {
           state.closed = true; delete state.hello;
           const messages = await txn.list({prefix: 'message:'}); for (const key of messages.keys()) await txn.delete(key);
         } else throw new ProtocolError('unsupported_operation');
-        await txn.put('state', state); return result;
+        await txn.put('state', state); return {status:200,value:result};
       });
-      return json(result);
+      return json(result.value,result.status);
     } catch (error) { return failure(error instanceof ProtocolError ? error.code : 'internal_error', 409); }
   }
   async alarm(): Promise<void> { await this.ctx.storage.deleteAll(); }

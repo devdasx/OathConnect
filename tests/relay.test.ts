@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {createIdentity, createPairing, joinPairing, random} from '@oathconnect/protocol';
+import {createIdentity, createPairing, joinPairing, random, unb64, text} from '@oathconnect/protocol';
 import {fixture} from './support/relay.ts';
 
 test('Cloudflare runtime: pairing, isolated encrypted delivery, ack and close', async () => {
@@ -76,4 +76,49 @@ test('relay restart preserves encrypted mailboxes, replay protection and closure
     assert.equal((await f.raw(session, 'wallet', wId, 'GET', '/messages?after=0')).body.error, 'session_closed');
     assert.equal((await f.raw(session, 'dapp', dId, 'PUT', '', {pairExpires: p.invitation.expires})).body.error, 'session_exists');
   } finally {await f.mf.dispose(); await rm(directory, {recursive: true, force: true});}
+});
+
+test('revoking either integrator blocks existing peer traffic and queued messages', async () => {
+  const {mkdtemp,rm}=await import('node:fs/promises');const {tmpdir}=await import('node:os');const {join}=await import('node:path');
+  for(const change of ['disable-dapp','expire-dapp','remove-origin','remove-role','replace-issuer','disable-wallet']) {
+    const directory=await mkdtemp(join(tmpdir(),'oathconnect-revocation-'));
+    const f=await fixture({persist:directory,splitProjects:true});
+    try {
+      const p=await createPairing(f.audience),session=p.invitation.session,dId=await createIdentity(),wId=await createIdentity();
+      await f.raw(session,'dapp',dId,'PUT','',{pairExpires:p.invitation.expires});
+      const joined=await joinPairing(p.uri,f.audience);await f.raw(session,'wallet',wId,'PUT','/peer',joined.hello);
+      const channel=await p.accept(joined.hello);await f.raw(session,'dapp',dId,'POST','/messages',await channel.seal({fixture:'queued'}));
+      const dapp=f.projects.find(p=>p.id==='test-dapp')!,wallet=f.projects.find(p=>p.id==='test-wallet')!;
+      if(change==='disable-dapp')dapp.enabled=false;
+      if(change==='expire-dapp')dapp.notAfter=1;
+      if(change==='remove-origin')dapp.origins=[];
+      if(change==='remove-role')dapp.roles=['wallet'];
+      if(change==='replace-issuer')dapp.keys.one=(await createIdentity()).publicKey;
+      if(change==='disable-wallet')wallet.enabled=false;
+      await f.restart();
+      const result=change==='disable-wallet' ? await f.raw(session,'dapp',dId,'GET','/peer') : await f.raw(session,'wallet',wId,'GET','/messages?after=0');
+      assert.equal(result.response.status,409,change);assert.equal(result.body.error,'peer_not_approved',change);
+      if(change==='disable-dapp') {
+        dapp.enabled=true;await f.restart();
+        assert.equal((await f.raw(session,'wallet',wId,'GET','/messages?after=0')).body.error,'session_closed');
+      }
+    } finally {await f.mf.dispose();await rm(directory,{recursive:true,force:true});}
+  }
+});
+
+test('a stale Worker issuer snapshot cannot create a session after issuer rotation', async()=>{
+  const {mkdtemp,rm}=await import('node:fs/promises');const {tmpdir}=await import('node:os');const {join}=await import('node:path');
+  const directory=await mkdtemp(join(tmpdir(),'oathconnect-registry-rollout-'));
+  const f=await fixture({persist:directory,splitProjects:true});
+  try {
+    const p=await createPairing(f.audience),identity=await createIdentity();
+    const prior=await f.raw(p.invitation.session,'dapp',identity,'GET','/peer');
+    const grant=JSON.parse(text(unb64(prior.token.split('.')[0]!,2048)));
+    const issuer=f.projects[0]!.keys.one;
+    f.projects[0]!.keys.one=(await createIdentity()).publicKey;await f.restart();
+    const namespace=await f.mf.getDurableObjectNamespace('SESSIONS');
+    // Simulates an already-verified request crossing an internal deployment boundary.
+    const response=await namespace.get(namespace.idFromName(p.invitation.session)).fetch('https://internal/',{method:'POST',body:JSON.stringify({grant,verifiedPeer:{key:grant.clientKey,project:grant.project,kid:grant.kid,issuer,origin:grant.origin},nonce:random(16),proofAt:Math.floor(Date.now()/1000),method:'PUT',suffix:'',query:'',body:JSON.stringify({pairExpires:p.invitation.expires})})});
+    assert.equal(response.status,409);assert.equal((await response.json() as {error:string}).error,'peer_not_approved');
+  } finally {await f.mf.dispose();await rm(directory,{recursive:true,force:true});}
 });
