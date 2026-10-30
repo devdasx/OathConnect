@@ -1,0 +1,17 @@
+{
+  "baselineCommit": "8a568d076f43b89f409aec0eca9b8edfe626772a",
+  "scope": "Internal HTTP failure handling and Sepolia fixture review; not an independent audit",
+  "finding": "A funded disposable-account attempt reached one approval, signature and submission attempt, but the provider returned an HTTP failure. The previous error omitted the HTTP status; its exact status and delivery outcome are unknown.",
+  "changes": [
+    "HTTP failures expose only the known RPC method and numeric status; response bodies are cancelled without being read or copied to errors",
+    "JSON-RPC error reporting remains limited to method and safe numeric provider code",
+    "Fresh fixture accounts use PublicNode for exactly one submission after checking its chain ID; Tenderly still supplies genesis and canonical-block state inspection",
+    "Existing uncertain transactions are never resubmitted or automatically failed over to another endpoint"
+  ],
+  "checks": {"typescriptTests": 47, "failures": 0, "httpStatusesTested": [400, 403, 429, 500, 503], "responseBodyCancelled": true, "retryCount": 0, "rootDependencyAudit": "zero reported vulnerabilities", "fixtureSyntax": "passed"},
+  "nativeSource": "Unchanged from v0.3.0-alpha.1; no additional simulator or device checks",
+  "qualification": "Fresh PublicNode submission still requires real testnet confirmation",
+  "productionReady": false,
+  "independentAuditCompleted": false,
+  "oathWalletIntegrated": false
+}

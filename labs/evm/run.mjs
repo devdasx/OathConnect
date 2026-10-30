@@ -7,12 +7,15 @@ import {join} from 'node:path';
 import {setTimeout as delay} from 'node:timers/promises';
 import {canonical, createIdentity, createPairing, joinPairing, ProtocolError} from '@oathconnect/protocol';
 import {Session, WalletAuthorizer} from '@oathconnect/sdk';
-import {EvmAdapter, EvmRpc, EvmRpcError} from '@oathconnect/evm';
+import {EvmAdapter, EvmRpc, EvmRpcError, EvmRpcHttpError} from '@oathconnect/evm';
 import {validationRelay} from '../support/relay.mjs';
 import {writeEvidence} from '../support/evidence.mjs';
 
 const chain='eip155:11155111', genesis='0x25a5cc106eea7138acab33231d7160d69cb777ee0c2c553fcddf5138993e6dd9';
 const endpoint='https://gateway.tenderly.co/public/sepolia', rpc=new EvmRpc(endpoint);
+// This is a deliberate endpoint for a fresh run, never a retry/fallback after
+// an uncertain submission. Genesis/state inspection remains archive-pinned.
+const broadcastEndpoint='https://ethereum-sepolia-rpc.publicnode.com', submissionRpc=new EvmRpc(broadcastEndpoint);
 const started=new Date().toISOString(), commit=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();
 const dirty=execFileSync('git',['status','--porcelain'],{encoding:'utf8'}).trim().length>0;
 const evidenceName=process.env.OATHCONNECT_LIVE_VALIDATION==='true'?'evm-sepolia-live':'evm-sepolia';
@@ -60,6 +63,7 @@ try {
       try{return await rpc.inspect(plan,signal);}catch(error){
         adapterFailure=error instanceof ProtocolError?error.code:'unclassified';
         if(error instanceof EvmRpcError)providerFailure={method:error.method,code:error.providerCode};
+        if(error instanceof EvmRpcHttpError)providerFailure={method:error.method,status:error.status};
         throw error;
       }
     },
@@ -68,13 +72,18 @@ try {
       return sender.signTransaction(Transaction.from(unsigned));
     },
     async broadcast(signed,signal){
-      stage='broadcast';check(++broadcasts===1,'evm_lab_duplicate_broadcast');
       transactionHash=Transaction.from(signed).hash;
-      // Preserve the public hash before submission so an interrupted run can be reconciled.
-      writeEvidence(evidenceName,{started,commit,dirty,chain,network:'Ethereum Sepolia',status:'broadcast_pending',hash:transactionHash,transactionConfirmed:false,decisions,executions,broadcasts});
-      try{return await rpc.broadcast(signed,signal);}catch(error){
+      try{
+        stage='submission_network';
+        check(await submissionRpc.request('eth_chainId',[],signal)==='0xaa36a7','evm_lab_submission_network_mismatch');
+        stage='broadcast';check(++broadcasts===1,'evm_lab_duplicate_broadcast');
+        // Preserve the public hash before submission so an interrupted run can be reconciled.
+        writeEvidence(evidenceName,{started,commit,dirty,chain,network:'Ethereum Sepolia',status:'broadcast_pending',hash:transactionHash,transactionConfirmed:false,decisions,executions,broadcasts});
+        return await submissionRpc.broadcast(signed,signal);
+      }catch(error){
         adapterFailure=error instanceof ProtocolError?error.code:'unclassified';
         if(error instanceof EvmRpcError)providerFailure={method:error.method,code:error.providerCode};
+        if(error instanceof EvmRpcHttpError)providerFailure={method:error.method,status:error.status};
         throw error;
       }
     }
@@ -101,7 +110,7 @@ try {
   check(canonicalBlock?.hash===receipt.blockHash,'evm_lab_receipt_reorg');
   const after=BigInt(await rpc.request('eth_getBalance',[recipient,{blockHash:receipt.blockHash,requireCanonical:true}],bounded()));
   check(after-before===1n,'evm_lab_balance_change');await identity();
-  const evidence={started,completed:new Date().toISOString(),commit,dirty,chain,network:'Ethereum Sepolia',genesisHash:genesis,rpc:endpoint,transport:relay.description,...(relay.deployedCommit?{deployedCommit:relay.deployedCommit}:{}),status:'confirmed',transactionConfirmed:true,finality:'canonical inclusion; finalized checkpoint not checked',hash:transactionHash,block:BigInt(receipt.blockNumber).toString(),blockHash:receipt.blockHash,gasUsed:'21000',effectiveGasPrice:BigInt(receipt.effectiveGasPrice).toString(),recipientBalanceIncrease:'1',decisions,executions,broadcasts,submissionStatus:result.status,operation:'One wei native transfer using reusable EvmAdapter',thorchainSwap:false,productionReady:false};
+  const evidence={started,completed:new Date().toISOString(),commit,dirty,chain,network:'Ethereum Sepolia',genesisHash:genesis,rpc:endpoint,broadcastRpc:broadcastEndpoint,transport:relay.description,...(relay.deployedCommit?{deployedCommit:relay.deployedCommit}:{}),status:'confirmed',transactionConfirmed:true,finality:'canonical inclusion; finalized checkpoint not checked',hash:transactionHash,block:BigInt(receipt.blockNumber).toString(),blockHash:receipt.blockHash,gasUsed:'21000',effectiveGasPrice:BigInt(receipt.effectiveGasPrice).toString(),recipientBalanceIncrease:'1',decisions,executions,broadcasts,submissionStatus:result.status,operation:'One wei native transfer using reusable EvmAdapter',thorchainSwap:false,productionReady:false};
   writeEvidence(evidenceName,evidence);console.log(JSON.stringify(evidence));
 } catch(error) {
   const code=error instanceof ProtocolError&&/^[a-z0-9_]{1,100}$/.test(error.code)?error.code:'unclassified';

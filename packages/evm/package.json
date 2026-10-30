@@ -1,6 +1,6 @@
 {
   "name": "@oathconnect/evm",
-  "version": "0.3.0-alpha.1",
+  "version": "0.3.0-alpha.2",
   "type": "module",
   "license": "MIT",
   "description": "Strict EVM transaction review and verified signing boundary for OathConnect",
@@ -18,8 +18,8 @@
   ],
   "sideEffects": false,
   "dependencies": {
-    "@oathconnect/protocol": "0.3.0-alpha.1",
-    "@oathconnect/sdk": "0.3.0-alpha.1",
+    "@oathconnect/protocol": "0.3.0-alpha.2",
+    "@oathconnect/sdk": "0.3.0-alpha.2",
     "ethers": "6.17.0"
   },
   "repository": {

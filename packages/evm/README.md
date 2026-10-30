@@ -83,6 +83,8 @@ Rejected JSON-RPC responses expose only `EvmRpcError.method` and a safe integer
 `providerCode` (or `null`). Provider message/data, endpoint credentials and signed
 payloads are excluded from the error. The code alone is diagnostic context, not
 proof that a transaction could not have reached the network.
+Non-successful HTTP responses expose `EvmRpcHttpError.method` and numeric
+`status`; their bodies are cancelled without being read or copied into errors.
 
 ## Validation and sources
 
