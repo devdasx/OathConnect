@@ -270,7 +270,7 @@
       "evmChainIdFromOath": null,
       "transport": "generic capability/session protocol",
       "transactionAdapter": "wallet implementation required",
-      "testnetQualification": "not completed"
+      "testnetQualification": "Devnet identity verified; free funding returned HTTP 410 before signing; see solana-devnet.json"
     },
     {
       "id": "somnia",
@@ -306,7 +306,7 @@
       "evmChainIdFromOath": null,
       "transport": "generic capability/session protocol",
       "transactionAdapter": "wallet implementation required",
-      "testnetQualification": "not completed"
+      "testnetQualification": "Fixed Stellar Testnet Payment confirmed through local relay; see stellar-testnet.json; deployed relay and general-purpose adapter remain open"
     },
     {
       "id": "sui",
@@ -378,7 +378,7 @@
       "evmChainIdFromOath": null,
       "transport": "generic capability/session protocol",
       "transactionAdapter": "wallet implementation required",
-      "testnetQualification": "XRP Testnet Payment confirmed; local relay only; see xrpl-testnet.json"
+      "testnetQualification": "Fixed XRP Testnet Payment confirmed through local and deployed relay; see xrpl-testnet.json and xrpl-testnet-live.json; general-purpose adapter remains open"
     }
   ]
 }

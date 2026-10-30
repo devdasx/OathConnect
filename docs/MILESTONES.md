@@ -16,3 +16,4 @@ Unfinished milestones must not be labeled complete to justify a version tag.
 - `v0.0.1-foundation`: public scope, threat model, license and release gates.
 - `v0.1.0-alpha.1`: TypeScript encrypted pairing, SDK authorization and Cloudflare relay foundation.
 - `v0.2.0-alpha.1`: signed peer identity, wallet-selected accounts, global allocation limits, Swift interoperability/authorization, THORChain read-only quote example, XRP testnet receipt and GitHub deployment pipeline. Native session negotiation and signed identity verification were added in the following public commit; the production/network gates are still open.
+- `v0.2.0-alpha.2`: closes a signing race during session shutdown, retains request replay protection across authorizer replacement, and aligns request IDs and UTF-8 byte limits across SDKs. Internal targeted regression review passed 25 TypeScript and 12 Swift host tests; independent audit remains open.

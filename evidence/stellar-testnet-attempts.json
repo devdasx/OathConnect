@@ -1,0 +1,52 @@
+[
+  {
+    "started": "2026-10-30T15:19:59.884Z",
+    "completed": "2026-10-30T15:20:30.959Z",
+    "network": "Stellar Testnet",
+    "chain": "stellar:testnet",
+    "stage": "sign_and_confirm",
+    "status": "blocked_or_failed",
+    "transactionConfirmed": false,
+    "code": "unclassified",
+    "broadcastStatus": "unknown; original harness did not retain broadcast state"
+  },
+  {
+    "started": "2026-10-30T15:22:54.837Z",
+    "completed": "2026-10-30T15:23:16.881Z",
+    "network": "Stellar Testnet",
+    "chain": "stellar:testnet",
+    "stage": "submit",
+    "status": "blocked_or_failed",
+    "transactionConfirmed": false,
+    "broadcastAttempted": true,
+    "hash": "6f489a3beb9aad7664ee2cf7b6bd0216195fb70497e472e2696d37a80b88e67b",
+    "code": "unclassified",
+    "investigation": {
+      "verifiedAt": "2026-10-30T15:28:17.283Z",
+      "transactionConfirmed": true,
+      "ledger": 5470031,
+      "operation": "Payment of one stroop",
+      "cause": "The SDK returned Uint8Array hash bytes; toString(hex) produced decimal bytes rather than hexadecimal.",
+      "endToEndRequestSucceeded": false
+    }
+  },
+  {
+    "started": "2026-10-30T15:28:21.430Z",
+    "completed": "2026-10-30T15:28:41.998Z",
+    "network": "Stellar Testnet",
+    "chain": "stellar:testnet",
+    "stage": "operations",
+    "status": "blocked_or_failed",
+    "transactionConfirmed": false,
+    "broadcastAttempted": true,
+    "hash": "8a69203a0112f5a581b05a49667a9a747774482de04a70dbfd6b9d8f4d1673cb",
+    "code": "unclassified",
+    "investigation": {
+      "verifiedAt": "2026-10-30T15:29:52.272Z",
+      "transactionConfirmed": true,
+      "ledger": 5470096,
+      "cause": "Horizon SDK exposes ledger as a link method and the ledger number as ledger_attr. Converting the method to a number produced NaN, which canonical JSON rejected.",
+      "endToEndRequestSucceeded": false
+    }
+  }
+]
