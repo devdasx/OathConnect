@@ -119,3 +119,12 @@ audit. Token/program methods, deployed devnet qualification and other chains
 remain open. Read-only Avalanche Fuji and BNB testnet identity/EIP-1898 probes
 passed; [those probes](../evidence/evm-additional-testnet-probes.json) do not
 establish transaction qualification. No Oath Wallet integration was performed.
+
+## BNB testnet fixture preparation
+
+The [fixed BSC testnet lab](../labs/bnb/README.md) now uses the restricted EVM
+adapter with immutable chain/genesis/endpoint, a pre-existing public test sink,
+one-wei value and a fixed legacy fee ceiling. Seven targeted host tests cover
+network mismatch, snapshots, exact receipts, balance effects, finality/reorg
+contradictions and single-attempt signing. Internal AI review found no actionable
+issues. No funded BNB transfer has completed; this is fixture preparation only.
