@@ -1,0 +1,16 @@
+{
+  "started": "2026-10-30T16:44:38.882Z",
+  "completed": "2026-10-30T16:45:07.525Z",
+  "network": "Stellar Testnet",
+  "chain": "stellar:testnet",
+  "transport": "deployed Cloudflare relay",
+  "status": "confirmed",
+  "hash": "95ff948650dc365f2ecbafe5ad4ff0176d7bb4f878264a56781be7eaf4148720",
+  "ledger": 5471013,
+  "decisions": 1,
+  "executions": 1,
+  "operation": "Payment of one stroop between disposable funded accounts",
+  "thorchainSwap": false,
+  "deployedCommit": "bb364c53b10e8099c7397e5087f2a8a822e9b2fe",
+  "harnessSHA256": "dcb522a4ee0a4eb44a5a5a5648262c9dcf9f0ea24e74476bdd9a3779a485e508"
+}
