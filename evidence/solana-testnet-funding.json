@@ -1,0 +1,13 @@
+{
+  "checked": "2026-10-30T22:10:06.468Z",
+  "source": "https://www.pinestake.com/faucet",
+  "network": "Solana testnet",
+  "genesisHash": "4uhcVJyU9pJkvQyS88uRDiswHXSCkY3zQawwpjk2NsNY",
+  "recipient": "EAdBughsxzZmNqXNFBt4UGtG3NEFXeumb9ghrfSsAvTh",
+  "signature": "2ETLwnjBMhCx7zS69TFcjnHy4o9iaTrfTndvY6NTbfxA5rtpuzAftr6uVrhVshz37jbbdW5FXJ8dA6b7ZfKix7BB",
+  "slot": 458656666,
+  "recipientLamportIncrease": "1000000000",
+  "cost": "Free; no mainnet assets spent",
+  "confirmation": "RPC finalized commitment; not independent consensus proof",
+  "privateKeys": "Disposable fixture keys remained in process and were discarded on exit"
+}

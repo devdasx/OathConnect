@@ -24,7 +24,7 @@ THORChain documentation retrieved 2026-10-30 describes stagenet endpoints as tra
 - A separate Stellar Testnet payment then completed through the deployed relay in ledger 5471013, again with one approval and execution. See [live receipt](../evidence/stellar-testnet-live.json). Both local and live receipts are preserved; neither is a THORChain swap or a general-purpose adapter qualification.
 - A fixed one-MIST Sui Testnet address-balance transfer completed through the local relay with one approval and one execution, included in checkpoint 400942229. The fixture pins the testnet genesis, decodes the exact transaction, restricts the two framework calls and their inputs, caps the gas budget, simulates, and checks the confirmed recipient balance change. See [receipt](../evidence/sui-testnet.json) and [fixture](../labs/sui/run.mjs). This is not a deployed relay test or a general-purpose Sui adapter.
 - A separate Sui Testnet transfer then completed through the deployed relay in checkpoint 400956792 with the same fixed policy and one approval/execution. See [live receipt](../evidence/sui-testnet-live.json). This does not certify other transaction types or a general-purpose signing adapter.
-- Solana's original official free-funding request returned HTTP 410 before signing; its attempt is preserved in [run history](../evidence/solana-devnet-runs). A later free community faucet funded a fresh disposable account. Clean commit `14d61fc6cbb278509adf278e5d49fe78b699e354` completed the fixed 0.001 devnet SOL transfer through the local relay in slot 516914340, with one approval, signature and submission and a 5,000-lamport fee. See the [receipt](../evidence/solana-devnet.json) and [funding evidence](../evidence/solana-devnet-funding.json). A read-only reconciler checks the stored signature, receipt effects and provider-reported finalized status without resubmission. Deployed Solana testing, other Solana transaction types, remaining chains and every THORChain swap remain unverified. Generic chain identifiers do not establish adapter coverage.
+- Solana's original official free-funding request returned HTTP 410 before signing; its attempt is preserved in [run history](../evidence/solana-devnet-runs). A later free community faucet funded a fresh disposable account. Clean commit `14d61fc6cbb278509adf278e5d49fe78b699e354` completed the fixed 0.001 devnet SOL transfer through the local relay in slot 516914340, with one approval, signature and submission and a 5,000-lamport fee. See the [receipt](../evidence/solana-devnet.json) and [funding evidence](../evidence/solana-devnet-funding.json). A read-only reconciler checks the stored signature, receipt effects and provider-reported finalized status without resubmission. Deployed devnet testing, other Solana transaction types, remaining chains and every THORChain swap remain unverified. Generic chain identifiers do not establish adapter coverage.
 - GitHub verification and deployment succeeded. Disposable one-hour validation identities were used for the live tests and are disabled in this registry. No third-party integrator is approved. Independent audit, load/abuse qualification and production approval remain open.
 
 ## EVM and execution context preview
@@ -91,3 +91,26 @@ Unchanged native sources passed
 16 native SDK host tests, one native fixture host test and generic iOS
 compilation at the 0.3.0-alpha.1 milestone. No simulator or physical device was
 used. This is internal validation, not an independent audit.
+
+## Solana development-network milestone
+
+The fixed Solana fixture also completed a transfer through the deployed relay on
+the separate Solana **testnet** cluster at clean commit
+`dce6883578afdb8d91584a9f70b625b1b71bb3fa`, slot 458656746. It used one
+approval, one signature, one submission, a 5,000-lamport fee and the expected
+1,000,000-lamport recipient increase. See [receipt](../evidence/solana-testnet-live.json).
+The [read-only finality check](../evidence/solana-testnet-live-finality.json)
+verified the signature, fixed transaction and balance effects against the
+provider's finalized receipt and signature status. This is one provider's
+assertion, not independent consensus proof; the check made no submission.
+The local transfer above was on **devnet**; these results are not a matched pair
+on one cluster. Both faucets were free and all transaction keys remained in the
+fixture processes. The temporary server approval is disabled in this source.
+
+All 21 Solana host tests pass, including cluster mismatch rejection and
+read-only receipt/finality consistency checks. Internal AI review found no
+actionable defects in the network-selection change; this is not an external
+audit. Token/program methods, deployed devnet qualification and other chains
+remain open. Read-only Avalanche Fuji and BNB testnet identity/EIP-1898 probes
+passed; [those probes](../evidence/evm-additional-testnet-probes.json) do not
+establish transaction qualification. No Oath Wallet integration was performed.

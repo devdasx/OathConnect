@@ -1,0 +1,19 @@
+{
+  "started": "2026-10-30T22:06:45.960Z",
+  "commit": "dce6883578afdb8d91584a9f70b625b1b71bb3fa",
+  "dirty": false,
+  "chain": "solana:4uhcVJyU9pJkvQyS88uRDiswHXSCkY3z",
+  "network": "Solana testnet",
+  "genesisHash": "4uhcVJyU9pJkvQyS88uRDiswHXSCkY3zQawwpjk2NsNY",
+  "stage": "sign",
+  "decisions": 1,
+  "executions": 1,
+  "broadcasts": 0,
+  "signature": "5WiPPkZLaVXJSyfD9F8hWxuSxMgqTBbBEs4F6Jq5LmRMzwhUtqRuEAq8RL2oAgMncPZnydq7BXUecJVVo4pEif72",
+  "transport": "deployed Cloudflare relay",
+  "deployedCommit": "dce6883578afdb8d91584a9f70b625b1b71bb3fa",
+  "thorchainSwap": false,
+  "productionReady": false,
+  "status": "broadcast_pending",
+  "transactionConfirmed": false
+}

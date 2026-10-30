@@ -1,0 +1,14 @@
+{
+  "checked": "2026-10-30T22:04:14.606Z",
+  "sourceCommit": "6380fe2bbb32909698b23e952a33b5e85bab0386",
+  "network": "Solana testnet",
+  "chain": "solana:4uhcVJyU9pJkvQyS88uRDiswHXSCkY3z",
+  "genesisHash": "4uhcVJyU9pJkvQyS88uRDiswHXSCkY3zQawwpjk2NsNY",
+  "endpoint": "https://api.testnet.solana.com",
+  "contextSlot": 458655259,
+  "lastValidBlockHeight": 410079436,
+  "minimumEmptyAccountRentLamports": 650240,
+  "operation": "Read-only identity, blockhash and rent probe; no keys, funding, approval, signing or submission",
+  "transactionConfirmed": false,
+  "productionReady": false
+}

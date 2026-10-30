@@ -1,6 +1,6 @@
 {
   "name": "@oathconnect/sdk",
-  "version": "0.3.0-alpha.2",
+  "version": "0.3.0-alpha.3",
   "type": "module",
   "license": "MIT",
   "description": "OathConnect website and wallet session SDK",
@@ -16,7 +16,7 @@
   ],
   "sideEffects": false,
   "dependencies": {
-    "@oathconnect/protocol": "0.3.0-alpha.2"
+    "@oathconnect/protocol": "0.3.0-alpha.3"
   },
   "repository": {
     "type": "git",

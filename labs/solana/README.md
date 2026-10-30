@@ -60,10 +60,17 @@ It verifies the signature, fixed transfer, receipt effects and agreement with
 the provider's finalized signature status. It stores only filtered public
 evidence, never the signed transaction bytes. This is one RPC provider's
 assertion of finality, not independent consensus proof. A missing receipt is
-not permission to resubmit. The deployed Solana test is still open. The unfunded
+not permission to resubmit. A separate testnet transfer completed through the
+deployed relay at clean commit `dce6883578afdb8d91584a9f70b625b1b71bb3fa`, in
+slot 458656746, with one approval/signature/submission and a 5,000-lamport fee.
+See the [live testnet receipt](../../evidence/solana-testnet-live.json) and
+[free funding evidence](../../evidence/solana-testnet-funding.json). This is a
+different cluster from the local devnet transfer. Its
+[read-only finality check](../../evidence/solana-testnet-live-finality.json)
+passed without another submission. The unfunded
 deployed-devnet process was stopped before pairing/signing when alternative funding
-was unavailable; see [attempt](../../evidence/solana-devnet-live.json). The testnet
-option has passed host tests but has not yet completed a funded network run.
+was unavailable; see [attempt](../../evidence/solana-devnet-live.json). Deployed
+devnet testing, tokens/programs and a general-purpose Solana adapter remain open.
 
 Primary references:
 
