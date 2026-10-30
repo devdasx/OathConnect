@@ -58,5 +58,10 @@ Free funding was obtained from [OpenFaucet](https://openfaucet.org/ethereum-sepo
 without a mainnet balance. Its browser computation was stopped at claim time.
 Funding receipts are separate from OathConnect transaction confirmation.
 
+The first fresh PublicNode submission completed in Sepolia block 12028472
+through the local relay. See `evidence/evm-sepolia.json` and the separately
+dated cross-provider confirmation. Earlier failed and uncertain attempts remain
+in the archives. This proves only the fixture's restricted native-transfer path.
+
 This does not qualify ERC-20 contracts, other EVM networks, THORChain swaps,
 Oath Wallet, or production use.

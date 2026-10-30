@@ -28,7 +28,11 @@ Safe HTTP status reporting and response-body cancellation are implemented. A
 funded Sepolia attempt isolated an HTTP failure at submission; delivery remains
 uncertain, with no resubmission. Fresh fixture runs explicitly use PublicNode
 for their single submission, while Tenderly supplies archive-pinned state reads.
-The native sources are unchanged from the published preview. Sepolia
-qualification, other networks, general transaction coverage and independent
-review remain open.
+One fresh native transfer completed through the local relay in Sepolia block
+12028472, with the expected receipt/log/balance change and cross-provider checks.
+Deployed relay EVM testing, token qualification and general transaction coverage
+remain open. A local abuse regression also reproduced and fixed global request
+accounting for capacity-rejected relay allocations. All 48 TypeScript tests pass.
+The native sources are unchanged from the published preview. Other networks
+and independent review remain open.
 The release must retain development-preview status.

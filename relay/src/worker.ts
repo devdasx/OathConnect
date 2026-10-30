@@ -165,11 +165,13 @@ export class ProjectQuota {
       state.sessions = Object.fromEntries(Object.entries(state.sessions).filter(([, expires]) => expires > now));
       if (state.requests >= 600) return false;
       state.requests++;
+      let allowed = true;
       if (input.create && !Object.hasOwn(state.sessions, input.session)) {
-        if (Object.keys(state.sessions).length >= 100) return false;
-        state.sessions[input.session] = now + 3600;
+        if (Object.keys(state.sessions).length >= 100) allowed = false;
+        else state.sessions[input.session] = now + 3600;
       }
-      await txn.put('quota', state); await txn.setAlarm((now + 3601) * 1000); return true;
+      // Capacity-rejected attempts still consume the global request budget.
+      await txn.put('quota', state); await txn.setAlarm((now + 3601) * 1000); return allowed;
     });
     return json({ok: allowed}, allowed ? 200 : 429);
   }

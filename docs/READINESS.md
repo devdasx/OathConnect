@@ -24,7 +24,7 @@ THORChain documentation retrieved 2026-10-30 describes stagenet endpoints as tra
 - A separate Stellar Testnet payment then completed through the deployed relay in ledger 5471013, again with one approval and execution. See [live receipt](../evidence/stellar-testnet-live.json). Both local and live receipts are preserved; neither is a THORChain swap or a general-purpose adapter qualification.
 - A fixed one-MIST Sui Testnet address-balance transfer completed through the local relay with one approval and one execution, included in checkpoint 400942229. The fixture pins the testnet genesis, decodes the exact transaction, restricts the two framework calls and their inputs, caps the gas budget, simulates, and checks the confirmed recipient balance change. See [receipt](../evidence/sui-testnet.json) and [fixture](../labs/sui/run.mjs). This is not a deployed relay test or a general-purpose Sui adapter.
 - A separate Sui Testnet transfer then completed through the deployed relay in checkpoint 400956792 with the same fixed policy and one approval/execution. See [live receipt](../evidence/sui-testnet-live.json). This does not certify other transaction types or a general-purpose signing adapter.
-- Solana devnet network identity was verified, but the official free-funding request returned HTTP 410 before any signing; see [attempt](../evidence/solana-devnet.json). Chains beyond XRP, Stellar and Sui, and every THORChain swap, remain unverified. Generic chain identifiers do not establish adapter coverage.
+- Solana devnet network identity was verified, but the official free-funding request returned HTTP 410 before any signing; see [attempt](../evidence/solana-devnet.json). The later limited Sepolia proof is described below. The remaining chains and every THORChain swap remain unverified. Generic chain identifiers do not establish adapter coverage.
 - GitHub verification and deployment succeeded. Disposable one-hour validation identities were used for the live tests and are disabled in this registry. No third-party integrator is approved. Independent audit, load/abuse qualification and production approval remain open.
 
 ## EVM and execution context preview
@@ -42,11 +42,24 @@ The corrected fixture then reached one approval, signature and submission
 attempt, but no receipt was returned. Two providers subsequently returned no
 transaction or receipt and an unchanged sender nonce. This is an unconfirmed
 attempt, not a passed test; the fixture did not resubmit. See the
-[attempt](../evidence/evm-sepolia.json),
+[archived attempt](../evidence/evm-sepolia-runs/56ddce00-541f-4c30-a847-346913f9d7fc.json),
 [read-only reconciliation](../evidence/evm-sepolia-reconciliation.json) and
 [gas diagnosis](../evidence/evm-sepolia-diagnosis.json). The original attempt did
 not retain the provider rejection code or submission result; subsequent fixture
 code records only safe status, method and numeric error context.
+
+A later fresh-account attempt isolated an HTTP failure at submission; see the
+[archived failure](../evidence/evm-sepolia-runs/c73133dc-b43d-441d-afb7-306d1f18d945.json)
+and [reconciliation](../evidence/evm-sepolia-http-reconciliation.json). Neither
+uncertain transaction was retried. A separate account then completed one native
+Sepolia transfer through the local relay, with one approval, one signature and
+one PublicNode submission, confirmed in block 12028472. The fixture checked the
+expected native-transfer log, 21,000 gas and one-wei recipient balance increase.
+See the [receipt](../evidence/evm-sepolia.json) and
+[cross-provider confirmation](../evidence/evm-sepolia-confirmation.json).
+This is canonical inclusion, not yet a verified finalized checkpoint. Deployed
+relay EVM testing, ERC-20 qualification, broader operations and other networks
+remain open.
 
 TypeScript and Swift adapter/approval callbacks receive a request execution
 context that becomes invalid on closure, expiry or completion. Cooperative checks
@@ -54,7 +67,10 @@ after asynchronous signing prevent subsequent broadcast. They cannot retract a
 submission already dispatched. Wallet lock enforcement and durable reconciliation
 of uncertain submissions remain integrator responsibilities.
 
-The current source passed 47 TypeScript tests. Unchanged native sources passed
+The current source passed 48 TypeScript tests, including a global relay quota
+regression: capacity-rejected allocation requests now count toward the request
+budget. See [internal finding and repair](../evidence/security-quota-accounting-20261030.json).
+Unchanged native sources passed
 16 native SDK host tests, one native fixture host test and generic iOS
 compilation at the 0.3.0-alpha.1 milestone. No simulator or physical device was
 used. This is internal validation, not an independent audit.

@@ -1,0 +1,28 @@
+{
+  "baselineCommit": "be2092a488d9747bee531a8ddac74af685dcdebd",
+  "scope": "Internal relay abuse review by the implementation agent; not an independent security audit",
+  "finding": "When a project had 100 allocations, a new allocation was rejected before the incremented request counter was persisted. Capacity-rejected requests therefore bypassed the intended global 600-request budget.",
+  "impact": "An approved integrator could continue permitted session operations after 600 total requests consisting of accepted and capacity-rejected allocations. Edge/IP throttles still applied; no unauthorized session admission or signing bypass was demonstrated.",
+  "reproduction": {
+    "environment": "Local Cloudflare workerd runtime; direct internal quota-object requests, no live server traffic",
+    "acceptedAllocations": 100,
+    "capacityRejectedAllocations": 500,
+    "request601BeforeFix": 200,
+    "expectedStatus": 429,
+    "concurrentRejectedRequestsAlsoReproduced": true
+  },
+  "repair": "Persist the incremented request counter even when allocation capacity rejects the request, within the same storage transaction. A full request budget still returns without additional writes.",
+  "limits": "Over-budget traffic still performs quota-object lookups. This repairs admission accounting, not all infrastructure work/cost bounds; distributed load/abuse qualification remains open.",
+  "validation": {
+    "typescriptTests": 48,
+    "failures": 0,
+    "request601AfterFix": 429,
+    "independentProjectStillAllowed": true,
+    "cloudflareDryRun": "passed",
+    "simulator": "not run",
+    "physicalDevice": "not run"
+  },
+  "productionReady": false,
+  "independentAuditCompleted": false,
+  "oathWalletIntegrated": false
+}
