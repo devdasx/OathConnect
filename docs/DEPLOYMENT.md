@@ -4,7 +4,7 @@ The checked-in deployment workflow deploys only a successful `Verify` run trigge
 
 Configure the GitHub `preview` environment with `CLOUDFLARE_ACCOUNT_ID` and a dedicated `CLOUDFLARE_API_TOKEN`, restricted to the target account and OathConnect Worker where supported. Then enable repository variable `CLOUDFLARE_DEPLOY_ENABLED=true`. Never copy a broad interactive OAuth token into CI. With no deployment credentials, the deploy job remains explicitly skipped; that is not a successful deployment.
 
-The default registry is empty, so session traffic is denied until reviewed integrators are added. `/health` and `/v1/registry` are public. Request logging is disabled. Cloudflare may retain platform metadata under its own policy; the operator cannot truthfully claim zero provider metadata collection.
+The registry denies session traffic unless an integrator has an enabled approval. The disposable validation identity is retained as a disabled public record. `/health` and `/v1/registry` are public. Request logging is disabled. Cloudflare may retain platform metadata under its own policy; the operator cannot truthfully claim zero provider metadata collection.
 
 ## Rollback and revocation
 

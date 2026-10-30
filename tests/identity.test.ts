@@ -24,3 +24,18 @@ test('wallet-selected account discovery cannot broaden requested chains or metho
   assert.equal(isSubset([{chain: 'eip155:11155111', account: 'selected', methods: ['eth_sign']}], request), false);
   assert.equal(isSubset([{...request[0]!, account: 'different'}], [{...request[0]!, account: 'requested'}]), false);
 });
+
+test('browser origin is bound automatically and cannot be overridden', async () => {
+  const previous = Object.getOwnPropertyDescriptor(globalThis, 'location');
+  const identity = await createIdentity();
+  Object.defineProperty(globalThis, 'location', {value: {origin: 'https://app.example.org'}, configurable: true});
+  try {
+    const {RelayClient} = await import('@oathconnect/sdk');
+    const session = random();
+    const client = new RelayClient({relay: 'https://relay.example.org', session, role: 'dapp', identity, getGrant: async () => 'test-grant'});
+    assert.equal((await client.attest({test: true})).origin, 'https://app.example.org');
+    assert.throws(() => new RelayClient({relay: 'https://relay.example.org', session, role: 'dapp', identity, origin: 'https://attacker.example', getGrant: async () => ''}), /origin_mismatch/);
+  } finally {
+    if (previous) Object.defineProperty(globalThis, 'location', previous); else Reflect.deleteProperty(globalThis, 'location');
+  }
+});

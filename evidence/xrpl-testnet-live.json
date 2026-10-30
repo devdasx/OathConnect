@@ -1,0 +1,17 @@
+{
+  "started": "2026-10-30T14:48:55.095Z",
+  "completed": "2026-10-30T14:49:24.884Z",
+  "chain": "xrpl:1",
+  "network": "XRP Ledger Testnet",
+  "rpc": "wss://s.altnet.rippletest.net:51233",
+  "transport": "deployed Cloudflare relay",
+  "deployedCommit": "0ee6e79da190a01dffe303da8146e7526b03c782",
+  "operation": "Payment of 1 drop between disposable testnet accounts",
+  "status": "confirmed",
+  "hash": "E3ECF650F640CA58658F2D2FA1317E4AF23158E2366026DFFA8C4376D128B544",
+  "ledger": 21940233,
+  "result": "tesSUCCESS",
+  "decisions": 1,
+  "executions": 1,
+  "thorchainSwap": false
+}

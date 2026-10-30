@@ -15,4 +15,4 @@ Unfinished milestones must not be labeled complete to justify a version tag.
 
 - `v0.0.1-foundation`: public scope, threat model, license and release gates.
 - `v0.1.0-alpha.1`: TypeScript encrypted pairing, SDK authorization and Cloudflare relay foundation.
-- `v0.2.0-alpha.1`: signed peer identity, wallet-selected accounts, global allocation limits, Swift interoperability/authorization, THORChain read-only quote example, XRP testnet receipt and GitHub deployment pipeline. Native session completion and the production/network gates are still open.
+- `v0.2.0-alpha.1`: signed peer identity, wallet-selected accounts, global allocation limits, Swift interoperability/authorization, THORChain read-only quote example, XRP testnet receipt and GitHub deployment pipeline. Native session negotiation and signed identity verification were added in the following public commit; the production/network gates are still open.

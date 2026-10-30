@@ -4,7 +4,7 @@ Build with `npm run build`. Workspace packages export ESM and TypeScript source 
 
 ## Pairing
 
-Website: call `createIdentity()` for the admission proof key and `createPairing(trustedRelay)`. Obtain a short-lived grant from your approved backend bound to the invitation session, local proof public key, role and exact origin. Construct `RelayClient`, call `create(invitation.expires)`, and render `pairing.uri` as a local QR. Never send that URI to third-party rendering or analytics services.
+Website: call `createIdentity()` for the admission proof key and `createPairing(trustedRelay)`. Obtain a short-lived grant from your approved backend bound to the invitation session, local proof public key, role and exact origin. Construct `RelayClient` (browser origin is read automatically; Node website clients must supply their exact `origin`), call `create(invitation.expires)`, and render `pairing.uri` as a local QR. Never send that URI to third-party rendering or analytics services.
 
 Wallet: require an explicitly trusted relay, call `joinPairing(uri, trustedRelay)`, obtain its wallet grant with a fresh proof identity, construct `RelayClient`, and call `join(hello)`. The website polls `hello()` and authenticates it with `pairing.accept(hello)`.
 

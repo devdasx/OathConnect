@@ -1,11 +1,19 @@
-import {canonical, createProof, parseJSON, ProtocolError, record, relayOrigin, requireThat, verifyGrant, verifyProof, type ClientIdentity, type Frame, type Hello, type Project, type Role} from '@oathconnect/protocol';
+import {canonical, fixed, role, createProof, parseJSON, ProtocolError, record, relayOrigin, requireThat, verifyGrant, verifyProof, type ClientIdentity, type Frame, type Hello, type Project, type Role} from '@oathconnect/protocol';
 
 export interface RelayOptions {relay: string; session: string; role: Role; identity: ClientIdentity; getGrant: () => Promise<string>; fetch?: typeof globalThis.fetch; origin?: string}
 export interface PeerIdentity {project: string; name: string; origin: string; role: Role}
 export interface Attestation {origin: string; grant: string; proof: string}
 export class RelayClient {
   readonly #options: RelayOptions; #closed = false;
-  constructor(options: RelayOptions) { relayOrigin(options.relay); this.#options = {...options}; }
+  constructor(options: RelayOptions) {
+    relayOrigin(options.relay); fixed(options.session, 32); role(options.role); fixed(options.identity.publicKey, 32);
+    const browserOrigin = typeof globalThis.location === 'object' ? globalThis.location.origin : undefined;
+    const origin = options.origin ?? browserOrigin ?? '';
+    if (origin) relayOrigin(origin);
+    requireThat(options.role === 'wallet' || origin !== '', 'origin_required');
+    requireThat(!browserOrigin || origin === browserOrigin, 'origin_mismatch');
+    this.#options = {...options, origin};
+  }
   async attest(value: unknown): Promise<Attestation> {
     const o = this.#options, grant = await o.getGrant();
     return {origin: o.origin ?? '', grant, proof: await createProof(grant, o.identity, 'ATTEST', `/v1/sessions/${o.session}`, canonical(value))};
