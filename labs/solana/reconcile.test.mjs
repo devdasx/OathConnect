@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {generateKeyPairSync,randomBytes,sign} from 'node:crypto';
 import {CHAIN,GENESIS,buildTransfer,decode64,encode58,verifiedWire} from './transfer.mjs';
 import {reconcileReceipt} from './reconcile-core.mjs';
+import {labNetwork} from './networks.mjs';
 function fixture(){
  const key=generateKeyPairSync('ed25519'),from=encode58(key.publicKey.export({format:'der',type:'spki'}).subarray(-32));
  const message=buildTransfer(from,encode58(randomBytes(32)),encode58(randomBytes(32)));
@@ -40,4 +41,12 @@ test('wrong stored or observed genesis fails before a receipt is accepted',async
   const f=fixture();change(f);await assert.rejects(()=>reconcileReceipt(f.expected,f.rpc));
  }
  const f=fixture(),original=f.rpc.request;f.rpc.request=async(...args)=>{const result=await original(...args);if(args[0]==='getSignatureStatuses')f.state.genesis='other';return result;};await assert.rejects(()=>reconcileReceipt(f.expected,f.rpc));
+});
+test('testnet reconciliation cannot relabel a devnet receipt or use the devnet provider',async()=>{
+ const f=fixture(),network=labNetwork('testnet');
+ await assert.rejects(()=>reconcileReceipt(f.expected,f.rpc,'testnet'),{code:'solana_reconciliation_wrong_network'});
+ f.expected.chain=network.chain;f.expected.genesisHash=network.genesis;
+ await assert.rejects(()=>reconcileReceipt(f.expected,f.rpc,'testnet'),{code:'solana_network_mismatch'});
+ f.state.genesis=network.genesis;const result=await reconcileReceipt(f.expected,f.rpc,'testnet');
+ assert.equal(result.chain,network.chain);assert.equal(result.provider,network.endpoint);assert.equal(result.finalized,true);
 });

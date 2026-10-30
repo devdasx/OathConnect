@@ -1,7 +1,9 @@
-import {CHAIN,GENESIS,check,decode58,decode64,encode58,safeNumber,verifiedWire,verifyReceipt} from './transfer.mjs';
+import {check,decode58,decode64,encode58,safeNumber,verifiedWire,verifyReceipt} from './transfer.mjs';
+import {labNetwork} from './networks.mjs';
 
 /** Read-only reconciliation of a previously retained public transaction signature. */
-export async function reconcileReceipt(expected,rpc){
+export async function reconcileReceipt(expected,rpc,networkName='devnet'){
+ const {chain:CHAIN,genesis:GENESIS,endpoint}=labNetwork(networkName);
  check(expected?.chain===CHAIN&&expected.genesisHash===GENESIS,'solana_reconciliation_wrong_network');
  decode58(expected.signature,64);
  if(expected.slot!==undefined)check(safeNumber(expected.slot)>0n,'solana_reconciliation_invalid_slot');
@@ -22,7 +24,7 @@ export async function reconcileReceipt(expected,rpc){
  check(status?.slot===effects.slot&&status.err===null&&status.confirmationStatus==='finalized'&&status.confirmations===null,'solana_finality_mismatch');
  check(await read('getGenesisHash')===GENESIS,'solana_network_mismatch');
  return {checked:new Date().toISOString(),chain:CHAIN,genesisHash:GENESIS,signature:expected.signature,...effects,
-  status:'finalized',transactionConfirmed:true,finalized:true,signatureVerified:true,provider:'https://api.devnet.solana.com',
+  status:'finalized',transactionConfirmed:true,finalized:true,signatureVerified:true,provider:endpoint,
   scope:'Provider-reported finalized receipt and signature status agree; signature, fixed message and balance effects verified. Not independent consensus proof.',
   submissions:0,thorchainSwap:false,productionReady:false};
 }

@@ -1,0 +1,17 @@
+{
+  "started": "2026-10-30T21:54:43.506Z",
+  "completed": "2026-10-30T22:01:13.226Z",
+  "commit": "d7d45476ef6fe6389673bd034e070eb9545c92cc",
+  "dirty": false,
+  "chain": "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1",
+  "network": "Solana devnet",
+  "genesisHash": "EtWTRABZaYq6iMfeYKouRu166VU2xqa1wcaWoxPkrZBG",
+  "status": "stopped_before_funding",
+  "stage": "free_testnet_funding",
+  "reason": "Alternative RPC faucet returned 410; independent devnet faucet balance was below minimum payout. Process stopped before pairing, approval or signing to prepare separately pinned Solana testnet fixture.",
+  "decisions": 0,
+  "executions": 0,
+  "broadcasts": 0,
+  "transactionConfirmed": false,
+  "productionReady": false
+}
