@@ -1,38 +1,52 @@
-// A single fixed Solana devnet transfer fixture, not a general-purpose transaction adapter.
-// No wallet keys are exported. Node's Ed25519 implementation performs all signing.
+// Fixed devnet fixture. Keys and signed bytes stay in memory; no mainnet/key-import option.
 import {generateKeyPairSync,sign} from 'node:crypto';
-import {writeFileSync} from 'node:fs';
-import {canonical,createIdentity,createPairing,digest,joinPairing} from '@oathconnect/protocol';
+import {execFileSync} from 'node:child_process';
+import {mkdtempSync,writeFileSync,rmSync} from 'node:fs';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
+import {setTimeout as delay} from 'node:timers/promises';
+import {canonical,createIdentity,createPairing,joinPairing,ProtocolError} from '@oathconnect/protocol';
 import {Session,WalletAuthorizer} from '@oathconnect/sdk';
 import {validationRelay} from '../support/relay.mjs';
-const alphabet='123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
-const encode58 = bytes => {let n=BigInt('0x'+Buffer.from(bytes).toString('hex')),s='';while(n){s=alphabet[Number(n%58n)]+s;n/=58n;}for(const b of bytes){if(b!==0)break;s='1'+s;}return s;};
-const decode58 = s => {if(!/^[1-9A-HJ-NP-Za-km-z]{1,88}$/.test(s))throw Error('invalid_encoding');let n=0n;for(const c of s)n=n*58n+BigInt(alphabet.indexOf(c));let hex=n.toString(16);if(hex.length%2)hex='0'+hex;const zeros=s.match(/^1*/)[0].length;return Buffer.concat([Buffer.alloc(zeros),n===0n?Buffer.alloc(0):Buffer.from(hex,'hex')]);};
-const endpoint='https://api.devnet.solana.com',genesis='EtWTRABZaYq6iMfeYKouRu166VU2xqa1wcaWoxPkrZBG',chain='solana:'+genesis.slice(0,32);
-async function rpc(method,params=[]){const r=await fetch(endpoint,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:1,method,params}),redirect:'error',signal:AbortSignal.timeout(15000)});if(!r.ok)throw Error('http_'+r.status);const raw=await r.text();if(raw.length>65536)throw Error('response_size');const v=JSON.parse(raw);if(v.error)throw Error('rpc_'+String(v.error.code).replace('-','minus'));return v.result;}
-async function confirmed(signature){for(let n=0;n<30;n++){const status=(await rpc('getSignatureStatuses',[[signature],{searchTransactionHistory:true}])).value[0];if(status?.err)throw Error('transaction_failed');if(['confirmed','finalized'].includes(status?.confirmationStatus))return status;await new Promise(r=>setTimeout(r,2000));}throw Error('confirmation_unknown');}
-let stage='network',relay,dapp,wallet;
-const started=new Date().toISOString();
+import {writeEvidence} from '../support/evidence.mjs';
+import {AMOUNT,CHAIN,GENESIS,MAX_FEE,buildTransfer,check,decode58,decode64,encode58,safeNumber} from './transfer.mjs';
+import {SolanaLabRpc,SolanaLabRpcError} from './rpc.mjs';
+import {FixedSolanaAdapter} from './adapter.mjs';
+const started=new Date().toISOString(),commit=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();
+const dirty=execFileSync('git',['status','--porcelain'],{encoding:'utf8'}).trim().length>0;
+const name=process.env.OATHCONNECT_LIVE_VALIDATION==='true'?'solana-devnet-live':'solana-devnet';
+let stage='network',relay,dapp,wallet,authorizer,fundingDirectory,signature,submissionStatus;
+let decisions=0,executions=0,broadcasts=0,providerFailure;
+const transport=new SolanaLabRpc(),rpc={async request(method,params=[],signal){
+ try{if(method==='sendTransaction'){check(++broadcasts===1,'solana_duplicate_broadcast');stage='broadcast';}return await transport.request(method,params,signal);}
+ catch(error){if(error instanceof SolanaLabRpcError)providerFailure={method:error.method,...(error.status!==undefined?{status:error.status}:{}),...(error.providerCode!==undefined?{code:error.providerCode}:{})};throw error;}
+}};
+const publicEvidence=extra=>({started,commit,dirty,chain:CHAIN,network:'Solana devnet',genesisHash:GENESIS,stage,decisions,executions,broadcasts,...(signature?{signature}:{}),...(submissionStatus?{submissionStatus}:{}),...(providerFailure?{providerFailure}:{}),...(relay?{transport:relay.description,...(relay.deployedCommit?{deployedCommit:relay.deployedCommit}:{})}:{}),thorchainSwap:false,productionReady:false,...extra});
 try{
- if(await rpc('getGenesisHash')!==genesis)throw Error('network_mismatch');
+ check(!dirty,'solana_lab_dirty_source');check(await rpc.request('getGenesisHash')===GENESIS,'solana_network_mismatch');
  const sender=generateKeyPairSync('ed25519'),receiver=generateKeyPairSync('ed25519');
- const from=sender.publicKey.export({type:'spki',format:'der'}).subarray(-32),to=receiver.publicKey.export({type:'spki',format:'der'}).subarray(-32),account=encode58(from);
- stage='free_testnet_funding';await confirmed(await rpc('requestAirdrop',[account,100000000,{commitment:'confirmed'}]));
+ const from=encode58(sender.publicKey.export({format:'der',type:'spki'}).subarray(-32)),to=encode58(receiver.publicKey.export({format:'der',type:'spki'}).subarray(-32));
+ stage='free_testnet_funding';fundingDirectory=mkdtempSync(join(tmpdir(),'oathconnect-solana-'));const deadline=Date.now()+1200000;
+ writeFileSync(join(fundingDirectory,'funding.json'),JSON.stringify({network:'Solana devnet',chain:CHAIN,address:from,expires:deadline})+'\n',{mode:0o600,flag:'wx'});
+ console.log(JSON.stringify({stage,address:from,publicFundingFile:join(fundingDirectory,'funding.json'),expiresInSeconds:1200}));
+ let funded=false;while(Date.now()<deadline){const result=await rpc.request('getBalance',[from,{commitment:'confirmed'}],AbortSignal.timeout(Math.max(1,Math.min(15000,deadline-Date.now()))));if(safeNumber(result?.value)>=AMOUNT+MAX_FEE){funded=true;break;}await delay(Math.max(0,Math.min(5000,deadline-Date.now())));}
+ check(funded,'solana_funding_timeout');check(await rpc.request('getGenesisHash')===GENESIS,'solana_network_mismatch');
  stage='pair';relay=await validationRelay();const p=await createPairing(relay.audience),w=await joinPairing(p.uri,relay.audience);
  const dc=relay.client(p.invitation.session,'dapp',await createIdentity()),wc=relay.client(p.invitation.session,'wallet',await createIdentity());await dc.create(p.invitation.expires);await wc.join(w.hello);
  dapp=new Session(await p.accept(await dc.hello()),dc,relay.projects);wallet=new Session(w.channel,wc,relay.projects);
- const cap={chain,account,methods:['solana_signAndSendTransaction']};await Promise.all([dapp.propose([{chain,methods:cap.methods}]),wallet.approveSession(async()=>[cap])]);
- stage='prepare';const recent=(await rpc('getLatestBlockhash',[{commitment:'confirmed'}])).value;const blockhash=decode58(recent.blockhash);if(blockhash.length!==32)throw Error('blockhash_size');
- const instruction=Buffer.alloc(12);instruction.writeUInt32LE(2,0);instruction.writeBigUInt64LE(1000000n,4);
- // Legacy message: one signer, three accounts, one SystemProgram transfer, no address tables.
- const message=Buffer.concat([Buffer.from([1,0,1,3]),from,to,Buffer.alloc(32),blockhash,Buffer.from([1,2,2,0,1,12]),instruction]);
- const params={message:message.toString('base64')},expected=canonical(params);const fee=(await rpc('getFeeForMessage',[params.message,{commitment:'confirmed'}])).value;if(!Number.isSafeInteger(fee)||fee<0||fee>10000)throw Error('fee_rejected');
- let decisions=0,executions=0;
- const authorizer=new WalletAuthorizer([cap],new Map([[chain+'/'+cap.methods[0],{
-  async review(request){if(request.chain!==chain||request.account!==account||canonical(request.params)!==expected)throw Error('test_policy_rejected');return{requestDigest:await digest(canonical(request)),summary:'Transfer exactly 0.001 devnet SOL to a disposable account, with at most 0.00001 SOL network fee.',warnings:['Fixed test-only fixture; not a general-purpose Solana adapter.']};},
-  async execute(request,context){context.assertActive();if(++executions!==1||canonical(request.params)!==expected||await rpc('getGenesisHash')!==genesis)throw Error('test_policy_rejected');context.assertActive();const signature=sign(null,message,sender.privateKey);const wire=Buffer.concat([Buffer.from([1]),signature,message]);context.assertActive();const hash=await rpc('sendTransaction',[wire.toString('base64'),{encoding:'base64',skipPreflight:false,preflightCommitment:'confirmed',maxRetries:0}]);if(hash!==encode58(signature))throw Error('signature_mismatch');const status=await confirmed(hash);return{hash,slot:status.slot,confirmation:status.confirmationStatus};}
- }]]),async(_,review)=>{decisions++;return{approved:true,requestDigest:review.requestDigest};});
- stage='sign_and_confirm';const [result]=await Promise.all([dapp.request(cap,cap.methods[0],params),wallet.serveOnce(authorizer)]);
- const evidence={started,completed:new Date().toISOString(),network:'Solana devnet',chain,status:'confirmed',transport:relay.description,...(relay.deployedCommit?{deployedCommit:relay.deployedCommit}:{}),...result,decisions,executions,thorchainSwap:false};writeFileSync('evidence/solana-devnet.json',JSON.stringify(evidence,null,2)+'\n');console.log(JSON.stringify(evidence));
-}catch(e){const code=/^[a-z0-9_]{1,80}$/.test(e.message)?e.message:'unclassified';const evidence={started,completed:new Date().toISOString(),network:'Solana devnet',chain,stage,status:'blocked_or_failed',transactionConfirmed:false,code,thorchainSwap:false};writeFileSync('evidence/solana-devnet.json',JSON.stringify(evidence,null,2)+'\n');console.log(JSON.stringify(evidence));process.exitCode=1;}
-finally{await dapp?.close().catch(()=>{});await wallet?.close().catch(()=>{});await relay?.dispose();}
+ const cap={chain:CHAIN,account:from,methods:['solana_signAndSendTransaction']};await Promise.all([dapp.propose([{chain:CHAIN,methods:cap.methods}]),wallet.approveSession(async()=>[cap])]);
+ stage='prepare';const latest=await rpc.request('getLatestBlockhash',[{commitment:'confirmed'}]);safeNumber(latest?.context?.slot);safeNumber(latest?.value?.lastValidBlockHeight);decode58(latest.value.blockhash,32);
+ const message=buildTransfer(from,to,latest.value.blockhash),params={message};
+ const adapter=new FixedSolanaAdapter({message,minimumSlot:latest.context.slot,rpc,
+  async sign(reviewed,context){context.assertActive();stage='sign';check(++executions===1&&reviewed===message,'solana_duplicate_or_changed_sign');const result=sign(null,decode64(reviewed,150),sender.privateKey);context.assertActive();return result;},
+  async beforeSubmit(value){signature=value;writeEvidence(name,publicEvidence({status:'broadcast_pending',transactionConfirmed:false}));}
+ });
+ authorizer=new WalletAuthorizer([cap],new Map([[CHAIN+'/'+cap.methods[0],adapter]]),async(request,review,context)=>{context.assertActive();check(canonical(request.params)===canonical(params),'solana_test_policy_rejected');check(++decisions===1,'solana_duplicate_approval');return{approved:true,requestDigest:review.requestDigest};});
+ stage='request';const [result]=await Promise.all([dapp.request(cap,cap.methods[0],params),wallet.serveOnce(authorizer)]);
+ check(result?.signature===signature&&decisions===1&&executions===1&&broadcasts===1,'solana_result_mismatch');submissionStatus=result.status;
+ writeEvidence(name,publicEvidence({status:'awaiting_receipt',transactionConfirmed:false}));
+ stage='receipt';let receipt;for(let i=0;i<60;i++){receipt=await rpc.request('getTransaction',[signature,{encoding:'base64',commitment:'confirmed',maxSupportedTransactionVersion:0}]);if(receipt)break;await delay(2000);}
+ const effects=adapter.confirmReceipt(receipt);check(await rpc.request('getGenesisHash')===GENESIS,'solana_network_mismatch');
+ const evidence=publicEvidence({completed:new Date().toISOString(),status:'confirmed',transactionConfirmed:true,...effects,confirmation:'RPC confirmed commitment; finalized commitment not checked',operation:'Fixed 0.001 devnet SOL native transfer, exact signed bytes and receipt balance effects checked'});writeEvidence(name,evidence);console.log(JSON.stringify(evidence));
+}catch(error){const code=error instanceof ProtocolError&&/^[a-z0-9_]{1,100}$/.test(error.code)?error.code:'solana_lab_failed';const evidence=publicEvidence({completed:new Date().toISOString(),status:'blocked_or_failed',transactionConfirmed:false,code});writeEvidence(name,evidence);console.log(JSON.stringify(evidence));process.exitCode=1;}
+finally{authorizer?.close();await dapp?.close().catch(()=>{});await wallet?.close().catch(()=>{});await relay?.dispose();if(fundingDirectory)rmSync(fundingDirectory,{recursive:true});}
