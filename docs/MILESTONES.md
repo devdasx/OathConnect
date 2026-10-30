@@ -22,7 +22,7 @@ Unfinished milestones must not be labeled complete to justify a version tag.
 - `v0.2.0-alpha.5`: real Chrome-to-Swift macOS interoperability through Cloudflare, same-origin browser polling support without relaxing signed admission, and live Stellar/Sui testnet receipts. Qualification fixtures and filtered evidence are public. Passed 30 TypeScript tests, 14 native SDK host tests, one native fixture host test and three JavaScript evidence/file tests. No Oath Wallet integration, iOS runtime test, independent audit or production certification.
 - `v0.3.0-alpha.1`: restricted EVM transaction validation, exact-byte signature verification and cooperative execution contexts in both SDKs, including cancellation propagation into detached native tasks. Passed 46 TypeScript tests, 16 native SDK host tests, one native fixture host test, three JavaScript fixture tests and generic iOS compilation. Four exact CI package archives, checksums and release evidence are published. GitHub deployed verified commit `8a568d076f43b89f409aec0eca9b8edfe626772a`; Sepolia and production qualification remain open.
 
-## Current 0.3.0-alpha.2 work
+## Published 0.3.0-alpha.2
 
 Safe HTTP status reporting and response-body cancellation are implemented. A
 funded Sepolia attempt isolated an HTTP failure at submission; delivery remains
@@ -35,4 +35,16 @@ remain open. A local abuse regression also reproduced and fixed global request
 accounting for capacity-rejected relay allocations. All 48 TypeScript tests pass.
 The native sources are unchanged from the published preview. Other networks
 and independent review remain open.
-The release must retain development-preview status.
+The release retains development-preview status. Its four exact CI archives, checksums and verification evidence are published at the GitHub release. The tagged source and deployment are `e090d7d0f83e9bd4e954f782eecbbf339ae5e0b2`.
+
+## Deployed Sepolia qualification
+
+A separate fresh account completed the same restricted native transfer through
+the deployed relay at `8c06a27cf1167993428b0728237260ac53aab0fc`, in Sepolia
+block 12028584, with one approval/signature/submission and the expected receipt,
+log and balance delta. See [live receipt](../evidence/evm-sepolia-live.json).
+The disposable registry approval is disabled in source after this test.
+The read-only reconciliation command and three adversarial tests make the
+provider receipt/canonical-block/finalized-height checks reproducible. They do
+not verify consensus independently. Token calls, other EVM networks, THORChain
+swaps, external audit and production qualification remain open.
