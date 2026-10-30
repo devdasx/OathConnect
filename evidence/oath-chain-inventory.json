@@ -315,7 +315,7 @@
       "evmChainIdFromOath": null,
       "transport": "generic capability/session protocol",
       "transactionAdapter": "wallet implementation required",
-      "testnetQualification": "not completed"
+      "testnetQualification": "Fixed Sui Testnet one-MIST transfer confirmed through local relay; see sui-testnet.json; deployed relay and general-purpose adapter remain open"
     },
     {
       "id": "taiko",
