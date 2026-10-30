@@ -8,6 +8,10 @@ const methods = new Set(['eth_chainId','eth_getBlockByNumber','eth_getBalance','
 export class EvmRpcError extends ProtocolError {
   constructor(readonly method: string, readonly providerCode: number | null) {super('evm_rpc_rejected');}
 }
+/** HTTP status only; the provider's response body and headers are never exposed. */
+export class EvmRpcHttpError extends ProtocolError {
+  constructor(readonly method: string, readonly status: number) {super('evm_rpc_http_failure');}
+}
 function quantity(value: unknown): string {
   requireThat(typeof value === 'string' && /^0x(0|[1-9a-f][0-9a-f]{0,63})$/.test(value), 'evm_rpc_invalid_quantity');
   return BigInt(value).toString();
@@ -41,7 +45,10 @@ export class EvmRpc {
     requireThat(new TextEncoder().encode(body).length <= 36_000, 'evm_rpc_request_too_large');
     try {
       const response = await this.fetcher(this.#endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body,credentials:'omit',redirect:'error',cache:'no-store',signal:AbortSignal.any([signal,AbortSignal.timeout(15000)])});
-      requireThat(response.ok, 'evm_rpc_http_failure');
+      if(!response.ok) {
+        await response.body?.cancel().catch(()=>{});
+        throw new EvmRpcHttpError(method,response.status);
+      }
       const reader = response.body?.getReader(); requireThat(reader, 'evm_rpc_empty_response');
       const chunks: Uint8Array[] = []; let size = 0;
       try {for (;;) {const part = await reader.read(); if(part.done)break; size += part.value.length; requireThat(size <= 262144, 'evm_rpc_response_too_large'); chunks.push(part.value);}}

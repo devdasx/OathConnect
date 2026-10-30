@@ -1,17 +1,19 @@
 {
-  "started": "2026-10-30T17:35:59.044Z",
-  "completed": "2026-10-30T17:49:44.899Z",
-  "commit": "3934d822ba897c256ed6831c8314ccd44d4c8cc9",
+  "started": "2026-10-30T18:03:38.478Z",
+  "completed": "2026-10-30T18:19:19.726Z",
+  "commit": "319fa859d77c2b0f9ba60abc3b298bc73963ff78",
   "dirty": false,
   "network": "Ethereum Sepolia",
   "chain": "eip155:11155111",
   "stage": "receipt",
   "status": "blocked_or_failed",
   "code": "evm_lab_receipt_unconfirmed",
+  "adapterFailure": "evm_rpc_http_failure",
+  "submissionStatus": "broadcast_unknown",
   "transactionConfirmed": false,
   "decisions": 1,
   "executions": 1,
   "broadcasts": 1,
-  "hash": "0xf53ab1582782cea4dc9174da681b82ee679c480a4b6a608b421a3887d7514336",
+  "hash": "0x463526a39c0fe2339a2ec4fa5ae7178e2f9dd1b9cabf2c1fa6fbe3fc0d162984",
   "productionReady": false
 }

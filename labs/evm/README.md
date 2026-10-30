@@ -39,11 +39,24 @@ requires `OATHCONNECT_LIVE_VALIDATION=true`; it checks deployed commit and
 registry identity and records a separate live evidence file.
 
 The read-only genesis check found the public PublicNode endpoint pruned below
-block 1,000,000 on 2026-10-30. This fixture instead uses Tenderly's public
-Sepolia endpoint listed in [ChainList](https://chainlist.org/chain/11155111).
+block 1,000,000 on 2026-10-30. This fixture uses Tenderly's public
+Sepolia endpoint for state inspection, listed in [ChainList](https://chainlist.org/chain/11155111).
 It still requires genesis history and EIP-1898; no identity check is bypassed.
 The pinned genesis also appears in
 [go-ethereum's chain configuration](https://github.com/ethereum/go-ethereum/blob/master/params/config.go).
+
+A funded attempt received an HTTP failure when submitting through Tenderly;
+the original transaction remains uncertain and is never retried. Starting with
+the 0.3.0-alpha.2 fixture, fresh accounts use
+[PublicNode's published Sepolia endpoint](https://ethereum.publicnode.com/?sepolia)
+for their single submission, after checking its chain ID. This is a configured
+endpoint for a new attempt, not automatic fallback or failover. Receipt checking
+continues through the archive reader. HTTP errors retain only method/status;
+JSON-RPC rejections retain only method/numeric code. Neither proves non-delivery.
+
+Free funding was obtained from [OpenFaucet](https://openfaucet.org/ethereum-sepolia)
+without a mainnet balance. Its browser computation was stopped at claim time.
+Funding receipts are separate from OathConnect transaction confirmation.
 
 This does not qualify ERC-20 contracts, other EVM networks, THORChain swaps,
 Oath Wallet, or production use.

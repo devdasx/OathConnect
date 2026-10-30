@@ -54,6 +54,7 @@ after asynchronous signing prevent subsequent broadcast. They cannot retract a
 submission already dispatched. Wallet lock enforcement and durable reconciliation
 of uncertain submissions remain integrator responsibilities.
 
-The current source passed 46 TypeScript tests, 16 native SDK host tests, one
-native fixture host test and generic iOS compilation. No simulator or physical
-device was used. This is internal validation, not an independent audit.
+The current source passed 47 TypeScript tests. Unchanged native sources passed
+16 native SDK host tests, one native fixture host test and generic iOS
+compilation at the 0.3.0-alpha.1 milestone. No simulator or physical device was
+used. This is internal validation, not an independent audit.

@@ -20,15 +20,15 @@ Unfinished milestones must not be labeled complete to justify a version tag.
 - `v0.2.0-alpha.3`: bounds approval by session expiry and honors native task cancellation before execution. Includes Stellar testnet evidence and the earlier attempt history. Internal targeted regression review passed 26 TypeScript and 14 Swift host tests; independent audit remains open.
 - `v0.2.0-alpha.4`: checks both integrators' current approval and pinned issuer on every relay operation, closes sessions on observed revocation, and drops their queued ciphertext. Includes the Sui local testnet receipt. Passed 28 TypeScript and 14 Swift host tests; independent audit remains open.
 - `v0.2.0-alpha.5`: real Chrome-to-Swift macOS interoperability through Cloudflare, same-origin browser polling support without relaxing signed admission, and live Stellar/Sui testnet receipts. Qualification fixtures and filtered evidence are public. Passed 30 TypeScript tests, 14 native SDK host tests, one native fixture host test and three JavaScript evidence/file tests. No Oath Wallet integration, iOS runtime test, independent audit or production certification.
+- `v0.3.0-alpha.1`: restricted EVM transaction validation, exact-byte signature verification and cooperative execution contexts in both SDKs, including cancellation propagation into detached native tasks. Passed 46 TypeScript tests, 16 native SDK host tests, one native fixture host test, three JavaScript fixture tests and generic iOS compilation. Four exact CI package archives, checksums and release evidence are published. GitHub deployed verified commit `8a568d076f43b89f409aec0eca9b8edfe626772a`; Sepolia and production qualification remain open.
 
-## Current 0.3 preview work
+## Current 0.3.0-alpha.2 work
 
-Restricted EVM transaction validation and verified signing are implemented, with
-cooperative execution contexts in both SDKs. Local validation passed 46 TypeScript
-tests, 16 native SDK host tests, one native fixture host test, three JavaScript
-fixture tests and generic iOS compilation. A funded Sepolia attempt reached one
-approval, signature and submission attempt, but has no confirmed receipt. Its
-hash and read-only reconciliation are public; no automatic retry was performed.
-Sepolia qualification, other networks, general transaction coverage and
-independent review remain open.
+Safe HTTP status reporting and response-body cancellation are implemented. A
+funded Sepolia attempt isolated an HTTP failure at submission; delivery remains
+uncertain, with no resubmission. Fresh fixture runs explicitly use PublicNode
+for their single submission, while Tenderly supplies archive-pinned state reads.
+The native sources are unchanged from the published preview. Sepolia
+qualification, other networks, general transaction coverage and independent
+review remain open.
 The release must retain development-preview status.

@@ -1,0 +1,15 @@
+{
+  "started": "2026-10-30T18:03:38.478Z",
+  "commit": "319fa859d77c2b0f9ba60abc3b298bc73963ff78",
+  "dirty": false,
+  "chain": "eip155:11155111",
+  "network": "Ethereum Sepolia",
+  "status": "awaiting_receipt",
+  "submissionStatus": "broadcast_unknown",
+  "hash": "0x463526a39c0fe2339a2ec4fa5ae7178e2f9dd1b9cabf2c1fa6fbe3fc0d162984",
+  "transactionConfirmed": false,
+  "decisions": 1,
+  "executions": 1,
+  "broadcasts": 1,
+  "adapterFailure": "evm_rpc_http_failure"
+}

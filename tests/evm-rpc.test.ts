@@ -2,7 +2,7 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {Wallet} from 'ethers';
 import {nowSeconds,random} from '@oathconnect/protocol';
-import {EvmRpc,EvmRpcError,decodeEvmTransaction,type EvmPolicy} from '@oathconnect/evm';
+import {EvmRpc,EvmRpcError,EvmRpcHttpError,decodeEvmTransaction,type EvmPolicy} from '@oathconnect/evm';
 const genesis='0x'+'11'.repeat(32),blockHash='0x'+'22'.repeat(32),account=Wallet.createRandom().address,recipient=Wallet.createRandom().address;
 const policy:EvmPolicy={chainId:'11155111',genesisHash:genesis,account,nativeSymbol:'ETH',feeModel:'gas-limit-times-price',maximumGas:'21000',maximumFeePerGas:'1000000000',maximumGasFee:'21000000000000',maximumValue:'1',maximumBlockAge:120,tokens:[]};
 const plan=()=>decodeEvmTransaction({type:'request',id:random(16),chain:'eip155:11155111',account,method:'eth_sendTransaction',expires:nowSeconds()+120,params:[{type:'0x2',chainId:'0xaa36a7',from:account,to:recipient,nonce:'0x0',gas:'0x5208',value:'0x1',data:'0x',maxFeePerGas:'0x3b9aca00',maxPriorityFeePerGas:'0x1'}]},policy);
@@ -37,6 +37,7 @@ test('EVM RPC rejects wrong response IDs, provider errors, oversized replies and
     });
     await assert.rejects(rpc.request('eth_sendRawTransaction',['0x00'],signal()),error=>{
       if(kind==='error'){assert.ok(error instanceof EvmRpcError);assert.equal(error.method,'eth_sendRawTransaction');assert.equal(error.providerCode,-32000);assert.ok(!JSON.stringify(error).includes('secret'));}
+      if(kind==='http'){assert.ok(error instanceof EvmRpcHttpError);assert.equal(error.method,'eth_sendRawTransaction');assert.equal(error.status,500);assert.ok(!JSON.stringify(error).includes('secret'));}
       return error instanceof Error&&!/secret|signed transaction/.test(error.message);
     });
     assert.equal(attempts,1,kind);
@@ -48,6 +49,22 @@ test('EVM RPC cancelled and unsupported calls do not reach the network',async()=
   const controller=new AbortController();controller.abort();
   await assert.rejects(rpc.broadcast('0x00',controller.signal),/cancelled/);
   await assert.rejects(rpc.request('personal_unlockAccount',[],signal()),/unsupported_method/);assert.equal(calls,0);
+});
+test('EVM RPC HTTP failures cancel the response without exposing its body or retrying',async()=>{
+  for(const status of [400,403,429,500,503]) {
+    let calls=0,cancelled=false;
+    const rpc=new EvmRpc('https://rpc.example.org/private',async()=>{
+      calls++;
+      const stream=new ReadableStream<Uint8Array>({cancel(){cancelled=true;}});
+      return new Response(stream,{status,statusText:'sensitive provider detail',headers:{'x-private':'sensitive provider detail'}});
+    });
+    await assert.rejects(rpc.broadcast('0x00',signal()),error=>{
+      assert.ok(error instanceof EvmRpcHttpError);
+      assert.equal(error.status,status);assert.equal(error.method,'eth_sendRawTransaction');
+      assert.ok(!JSON.stringify(error).includes('sensitive'));return true;
+    });
+    assert.equal(calls,1);assert.equal(cancelled,true);
+  }
 });
 test('EVM RPC refuses a network switch or reorg during inspection',async()=>{
   for(const change of ['chain','block','height']){
