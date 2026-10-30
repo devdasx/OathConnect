@@ -1,11 +1,13 @@
-import {nowSeconds, ProtocolError, record, requireThat, type SecureChannel} from '@oathconnect/protocol';
-import {newRequest, validateCapabilities, type Capability, type WalletAuthorizer} from './permissions.js';
-import {RelayClient} from './transport.js';
+import {nowSeconds, ProtocolError, record, requireThat, type Project, type SecureChannel} from '@oathconnect/protocol';
+import {isSubset, newRequest, validateCapabilities, validateProposal, type Capability, type RequestedCapability, type WalletAuthorizer} from './permissions.js';
+import {RelayClient, type PeerIdentity} from './transport.js';
 
 /** One request in flight. Ambiguous failures close locally; never automatically retry a signature. */
 export class Session {
   #cursor = 0; #closed = false; #busy = false; #capabilities: Capability[] | undefined; #activeAuthorizer: WalletAuthorizer | undefined;
-  constructor(private readonly channel: SecureChannel, private readonly relay: RelayClient) {}
+  readonly #projects: readonly Project[]; #peer: PeerIdentity | undefined;
+  constructor(private readonly channel: SecureChannel, private readonly relay: RelayClient, trustedProjects: readonly Project[]) {this.#projects = structuredClone(trustedProjects);}
+  get peer(): PeerIdentity | undefined {return this.#peer ? {...this.#peer} : undefined;}
   async #send(value: unknown) { requireThat(!this.#closed, 'session_closed'); await this.relay.send(await this.channel.seal(value)); }
   async #receive(deadline: number): Promise<unknown> {
     while (!this.#closed && nowSeconds() < deadline) {
@@ -25,24 +27,28 @@ export class Session {
     catch (error) { this.#closed = true; this.channel.close(); this.#activeAuthorizer?.close(); throw error; }
     finally { this.#busy = false; }
   }
-  async propose(capabilities: Capability[]): Promise<Capability[]> {
+  async propose(capabilities: RequestedCapability[]): Promise<Capability[]> {
     return this.#exclusive(async () => {
       requireThat(this.channel.localRole === 'dapp' && !this.#capabilities, 'invalid_state');
-      const requested = validateCapabilities(capabilities); await this.#send({type: 'proposal', capabilities: requested});
-      const response = await this.#receive(nowSeconds() + 120); record(response, ['type', 'capabilities']); requireThat(response.type === 'approved');
+      const requested = validateProposal(capabilities); const proposal = {type: 'proposal', capabilities: requested};
+      await this.#send({...proposal, identity: await this.relay.attest(proposal)});
+      const response = await this.#receive(nowSeconds() + 120); record(response, ['type', 'capabilities', 'identity']); requireThat(response.type === 'approved');
+      this.#peer = await this.relay.identify({type: response.type, capabilities: response.capabilities}, response.identity, this.#projects, 'wallet');
       const approved = validateCapabilities(response.capabilities);
-      for (const c of approved) requireThat(requested.some(r => r.chain === c.chain && r.account === c.account && c.methods.every(m => r.methods.includes(m))), 'permission_escalation');
+      requireThat(isSubset(approved, requested), 'permission_escalation');
       this.#capabilities = approved; return structuredClone(approved);
     });
   }
-  async approveSession(decide: (requested: Capability[]) => Promise<Capability[]>): Promise<Capability[]> {
+  async approveSession(decide: (requested: RequestedCapability[], peer: PeerIdentity) => Promise<Capability[]>): Promise<Capability[]> {
     return this.#exclusive(async () => {
       requireThat(this.channel.localRole === 'wallet' && !this.#capabilities, 'invalid_state');
-      const proposal = await this.#receive(nowSeconds() + 120); record(proposal, ['type', 'capabilities']); requireThat(proposal.type === 'proposal');
-      const requested = validateCapabilities(proposal.capabilities);
-      const approved = validateCapabilities(await decide(structuredClone(requested)));
-      for (const c of approved) requireThat(requested.some(r => r.chain === c.chain && r.account === c.account && c.methods.every(m => r.methods.includes(m))), 'permission_escalation');
-      this.#capabilities = approved; await this.#send({type: 'approved', capabilities: approved}); return structuredClone(approved);
+      const proposal = await this.#receive(nowSeconds() + 120); record(proposal, ['type', 'capabilities', 'identity']); requireThat(proposal.type === 'proposal');
+      this.#peer = await this.relay.identify({type: proposal.type, capabilities: proposal.capabilities}, proposal.identity, this.#projects, 'dapp');
+      const requested = validateProposal(proposal.capabilities);
+      const approved = validateCapabilities(await decide(structuredClone(requested), {...this.#peer}));
+      requireThat(isSubset(approved, requested), 'permission_escalation');
+      this.#capabilities = approved; const response = {type: 'approved', capabilities: approved};
+      await this.#send({...response, identity: await this.relay.attest(response)}); return structuredClone(approved);
     });
   }
   async request(capability: Capability, method: string, params: unknown): Promise<unknown> {

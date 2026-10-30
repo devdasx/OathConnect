@@ -1,0 +1,33 @@
+{
+  "notice": "PUBLIC TEST-ONLY KEYS. NEVER USE FOR LIVE PAIRING.",
+  "now": 1700000000,
+  "uri": "oathconnect://pair#eyJ2IjoxLCJzZXNzaW9uIjoiQkFRRUJBUUVCQVFFQkFRRUJBUUVCQVFFQkFRRUJBUUVCQVFFQkFRRUJBUSIsInJlbGF5IjoiaHR0cHM6Ly9yZWxheS5leGFtcGxlLm9yZyIsImV4cGlyZXMiOjE3MDAwMDAzMDAsInNlY3JldCI6IkF3TURBd01EQXdNREF3TURBd01EQXdNREF3TURBd01EQXdNREF3TURBd00iLCJwdWJsaWNLZXkiOiJCR193TzVTU1FjNGRyZFExR2VhV0RncUZ0QnBwb0Z3eWdRT3FLODRWbE1vV1BFOTFPbFdfQWR4VDlzQ3d4LTduaTBER18zMGxxVzRpZ3JtSnp2Y2NGRW8ifQ",
+  "walletPrivate": "AgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgI",
+  "hello": {
+    "v": 1,
+    "session": "BAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQ",
+    "publicKey": "BFUPRxAD89-Xw99QaseX9nIfsaH7e49vg9IkSYplyI4kE2CT1wEuUJpzcVy9CwCjzA_0tcAbP_oZarH7MnA2uOY",
+    "mac": "kkC8goaTLr9GmU1CnF4oeKzn19INSdCG9vHLR3UnMCo"
+  },
+  "plaintext": "{\"message\":\"public interoperability fixture\"}",
+  "frames": {
+    "dapp": {
+      "v": 1,
+      "session": "BAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQ",
+      "sender": "dapp",
+      "sequence": 1,
+      "expires": 1700003600,
+      "nonce": "BQUFBQUFBQUFBQUF",
+      "ciphertext": "-KpCtYv_YQQDDPNyLaL4iC46e8eygseILJ09oSMkvyQpfaC6aGAA9R7X9_93g1ZzEfF1WErJUJFuddIxTg"
+    },
+    "wallet": {
+      "v": 1,
+      "session": "BAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQ",
+      "sender": "wallet",
+      "sequence": 1,
+      "expires": 1700003600,
+      "nonce": "BQUFBQUFBQUFBQUF",
+      "ciphertext": "FI_7jcCy25zUklCLt4VMqMLGWEHL6XPhwwr2X6sbTAHKO9anH3d7YPoQ70v-4nHr2_EZGF0YyoUtIaxB1w"
+    }
+  }
+}

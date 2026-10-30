@@ -2,7 +2,7 @@ import type {DurableObjectNamespace, DurableObjectState, RateLimit} from '@cloud
 import {fixed, integer, nowSeconds, opposite, parseJSON, ProtocolError, record, requireThat, validateFrame, verifyGrant, verifyProof, type Frame, type Grant, type Project} from '@oathconnect/protocol';
 import projects from '../../registry/projects.json';
 
-interface Env {SESSIONS: DurableObjectNamespace; PUBLIC_ORIGIN: string; RELEASE_SHA: string; MODE: string; IP_LIMIT: RateLimit; PROJECT_LIMIT: RateLimit}
+interface Env {SESSIONS: DurableObjectNamespace; PROJECTS: DurableObjectNamespace; PUBLIC_ORIGIN: string; RELEASE_SHA: string; MODE: string; IP_LIMIT: RateLimit; PROJECT_LIMIT: RateLimit}
 type Peer = {key: string; project: string; kid: string};
 interface State {session: string; pairExpires: number; expires: number; closed: boolean; dapp: Peer; wallet?: Peer; hello?: unknown; sent: {dapp: number; wallet: number}; ack: {dapp: number; wallet: number}; count: number; nonces: Record<string, number>; window: number; requests: number}
 interface Internal {grant: Grant; nonce: string; proofAt: number; method: string; suffix: string; query: string; body: string}
@@ -48,6 +48,9 @@ export default {
       if (!(await env.PROJECT_LIMIT.limit({key: grant.project})).success) return cors(failure('rate_limited', 429), origin);
       const body = await boundedBody(request);
       const proof = await verifyProof(request.headers.get('X-Oath-Proof') ?? '', grant, token, request.method, url.pathname + url.search, body);
+      const quota = env.PROJECTS.get(env.PROJECTS.idFromName(grant.project));
+      const allocation = await quota.fetch('https://internal/', {method: 'POST', body: JSON.stringify({session: grant.session, create: request.method === 'PUT' && !route[2]})});
+      if (!allocation.ok) return cors(failure('project_capacity', 429), origin);
       const object = env.SESSIONS.get(env.SESSIONS.idFromName(grant.session));
       const response = await object.fetch('https://internal/', {method: 'POST', body: JSON.stringify({grant, nonce: proof.nonce, proofAt: proof.at, method: request.method, suffix: route[2] ?? '', query: url.search, body} satisfies Internal)});
       return cors(new Response(await response.text(), {status: response.status, headers: [...response.headers]}), origin);
@@ -119,4 +122,26 @@ export class RelaySession {
     } catch (error) { return failure(error instanceof ProtocolError ? error.code : 'internal_error', 409); }
   }
   async alarm(): Promise<void> { await this.ctx.storage.deleteAll(); }
+}
+
+/** Global per-integrator budget. Edge rate limits alone are not a global allocation cap. */
+export class ProjectQuota {
+  constructor(private readonly ctx: DurableObjectState) {}
+  async fetch(request: Request): Promise<Response> {
+    const input = await request.json() as {session: string; create: boolean}; const now = nowSeconds();
+    const allowed = await this.ctx.storage.transaction(async txn => {
+      const state = await txn.get<{window: number; requests: number; sessions: Record<string, number>}>('quota') ?? {window: now, requests: 0, sessions: {}};
+      if (now - state.window >= 60) {state.window = now; state.requests = 0;}
+      state.sessions = Object.fromEntries(Object.entries(state.sessions).filter(([, expires]) => expires > now));
+      if (state.requests >= 600) return false;
+      state.requests++;
+      if (input.create && !Object.hasOwn(state.sessions, input.session)) {
+        if (Object.keys(state.sessions).length >= 100) return false;
+        state.sessions[input.session] = now + 3600;
+      }
+      await txn.put('quota', state); await txn.setAlarm((now + 3601) * 1000); return true;
+    });
+    return json({ok: allowed}, allowed ? 200 : 429);
+  }
+  async alarm() {await this.ctx.storage.deleteAll();}
 }

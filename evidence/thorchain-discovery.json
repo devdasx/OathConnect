@@ -1,0 +1,124 @@
+{
+  "fetchedAt": "2026-10-30T14:28:21.651242+00:00",
+  "source": "https://gateway.liquify.com/chain/thorchain_api/thorchain/inbound_addresses",
+  "kind": "read-only network observation; no signing or broadcasts",
+  "chains": [
+    {
+      "chain": "AVAX",
+      "halted": false,
+      "global_trading_paused": false,
+      "chain_trading_paused": false,
+      "oathCatalog": true,
+      "realTestnetTransaction": "not completed",
+      "thorchainSwap": "not completed"
+    },
+    {
+      "chain": "BASE",
+      "halted": false,
+      "global_trading_paused": false,
+      "chain_trading_paused": false,
+      "oathCatalog": true,
+      "realTestnetTransaction": "not completed",
+      "thorchainSwap": "not completed"
+    },
+    {
+      "chain": "BCH",
+      "halted": false,
+      "global_trading_paused": false,
+      "chain_trading_paused": false,
+      "oathCatalog": true,
+      "realTestnetTransaction": "not completed",
+      "thorchainSwap": "not completed"
+    },
+    {
+      "chain": "BSC",
+      "halted": false,
+      "global_trading_paused": false,
+      "chain_trading_paused": false,
+      "oathCatalog": true,
+      "realTestnetTransaction": "not completed",
+      "thorchainSwap": "not completed"
+    },
+    {
+      "chain": "BTC",
+      "halted": false,
+      "global_trading_paused": false,
+      "chain_trading_paused": false,
+      "oathCatalog": true,
+      "realTestnetTransaction": "not completed",
+      "thorchainSwap": "not completed"
+    },
+    {
+      "chain": "DOGE",
+      "halted": false,
+      "global_trading_paused": false,
+      "chain_trading_paused": false,
+      "oathCatalog": true,
+      "realTestnetTransaction": "not completed",
+      "thorchainSwap": "not completed"
+    },
+    {
+      "chain": "ETH",
+      "halted": false,
+      "global_trading_paused": false,
+      "chain_trading_paused": false,
+      "oathCatalog": true,
+      "realTestnetTransaction": "not completed",
+      "thorchainSwap": "not completed"
+    },
+    {
+      "chain": "GAIA",
+      "halted": true,
+      "global_trading_paused": false,
+      "chain_trading_paused": true,
+      "oathCatalog": false,
+      "realTestnetTransaction": "not completed",
+      "thorchainSwap": "not completed"
+    },
+    {
+      "chain": "LTC",
+      "halted": false,
+      "global_trading_paused": false,
+      "chain_trading_paused": false,
+      "oathCatalog": true,
+      "realTestnetTransaction": "not completed",
+      "thorchainSwap": "not completed"
+    },
+    {
+      "chain": "SOL",
+      "halted": true,
+      "global_trading_paused": false,
+      "chain_trading_paused": true,
+      "oathCatalog": true,
+      "realTestnetTransaction": "not completed",
+      "thorchainSwap": "not completed"
+    },
+    {
+      "chain": "TRON",
+      "halted": false,
+      "global_trading_paused": false,
+      "chain_trading_paused": false,
+      "oathCatalog": true,
+      "realTestnetTransaction": "not completed",
+      "thorchainSwap": "not completed"
+    },
+    {
+      "chain": "XRP",
+      "halted": false,
+      "global_trading_paused": false,
+      "chain_trading_paused": false,
+      "oathCatalog": true,
+      "realTestnetTransaction": "Payment confirmed; see xrpl-testnet.json; not a THORChain swap",
+      "thorchainSwap": "not completed"
+    },
+    {
+      "chain": "ZEC",
+      "halted": false,
+      "global_trading_paused": false,
+      "chain_trading_paused": false,
+      "oathCatalog": false,
+      "realTestnetTransaction": "not completed",
+      "thorchainSwap": "not completed"
+    }
+  ]
+}

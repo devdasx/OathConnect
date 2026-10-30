@@ -47,3 +47,16 @@ test('strict encoding, size, depth and closure', async () => {
   assert.throws(() => d.seal({x: 'x'.repeat(25000)}), /message_too_large/);
   d.close(); await assert.rejects(d.seal({x: 1}), /session_closed/);
 });
+
+test('queued encryption rechecks the clock and canonical encoding rejects ambiguous Unicode', async () => {
+  const p = await createPairing(relay); const w = await joinPairing(p.uri, relay); const d = await p.accept(w.hello);
+  const realNow = Date.now;
+  try {
+    const pending = d.seal({queued: true});
+    Date.now = () => d.expires * 1000;
+    await assert.rejects(pending, /session_closed/);
+  } finally {Date.now = realNow;}
+  assert.throws(() => canonical({'é': 1}), /invalid_object_key/);
+  assert.throws(() => canonical({label: '\ud800'}), /invalid_unicode/);
+  assert.equal(canonical({label: 'שלום 🔐'}), '{"label":"שלום 🔐"}');
+});

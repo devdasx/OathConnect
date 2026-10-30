@@ -19,3 +19,7 @@ Public, version-controlled registry entries approve integrator Ed25519 issuer pu
 The reference relay uses bounded HTTPS mailboxes with explicit cursor reads, acknowledgments, quotas, expiry and close. It stores only handshake public material and encrypted frames. Admission does not authorize signing. Negotiated chain/account/method grants are end-to-end encrypted and enforced locally. Requests bind an exact account and chain, have unique IDs and short deadlines, and require a fresh approval decision over the exact immutable request digest. Error messages are bounded and must not leak payloads or signing secrets.
 
 Unknown versions, unexpected fields, unsupported methods, missing permissions, duplicate IDs, invalid network IDs and expired messages are rejected. Websites are responsible for adding OathConnect support; this is not a WalletConnect compatibility bridge.
+
+## Canonical request encoding
+
+Request digests use bounded JSON with safe integers only, Unicode scalar strings, and printable ASCII object keys of 1–128 bytes. Keys sort by UTF-16 code units. Floating-point values, lone surrogates and non-ASCII object keys are rejected. This avoids cross-language normalization ambiguity; monetary quantities are decimal strings.

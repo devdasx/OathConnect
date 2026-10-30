@@ -1,6 +1,7 @@
 import {canonical, digest, integer, nowSeconds, parseJSON, random, record, requireThat} from '@oathconnect/protocol';
 
 export interface Capability {chain: string; account: string; methods: string[]}
+export interface RequestedCapability {chain: string; methods: string[]; account?: string}
 export interface SigningRequest {type: 'request'; id: string; chain: string; account: string; method: string; params: unknown; expires: number}
 export interface Review {requestDigest: string; summary: string; warnings: string[]}
 export interface Approval {approved: boolean; requestDigest: string}
@@ -21,6 +22,20 @@ export function validateCapabilities(value: unknown): Capability[] {
     const key = `${c.chain}/${c.account}`; requireThat(!seen.has(key), 'duplicate_capability'); seen.add(key);
   }
   return parseJSON(canonical(value)) as Capability[];
+}
+export function validateProposal(value: unknown): RequestedCapability[] {
+  requireThat(Array.isArray(value) && value.length > 0 && value.length <= 64, 'invalid_proposal');
+  const seen = new Set<string>();
+  for (const c of value) {
+    requireThat(c !== null && typeof c === 'object' && !Array.isArray(c), 'invalid_capability');
+    record(c, Object.hasOwn(c, 'account') ? ['chain', 'account', 'methods'] : ['chain', 'methods']);
+    validateCapabilities([{...c, account: c.account ?? 'wallet-selected'}]);
+    const key = `${c.chain}/${c.account ?? '*'}`; requireThat(!seen.has(key), 'duplicate_capability'); seen.add(key);
+  }
+  return parseJSON(canonical(value)) as RequestedCapability[];
+}
+export function isSubset(approved: Capability[], requested: RequestedCapability[]): boolean {
+  return approved.every(c => requested.some(r => r.chain === c.chain && (r.account === undefined || r.account === c.account) && c.methods.every(m => r.methods.includes(m))));
 }
 export function validateRequest(value: unknown, capabilities: readonly Capability[], now = nowSeconds()): SigningRequest {
   record(value, ['type', 'id', 'chain', 'account', 'method', 'params', 'expires']); requireThat(value.type === 'request');

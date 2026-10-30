@@ -44,3 +44,15 @@ test('Cloudflare runtime: 32-frame mailbox bound, sequence enforcement and malic
     assert.equal((await f.raw(s, 'dapp', dId, 'POST', '/messages', extra)).response.status, 200);
   } finally {await f.mf.dispose();}
 });
+test('global integrator allocation budget stops the 101st session', async () => {
+  const f = await fixture();
+  try {
+    const identity = await createIdentity();
+    for (let n = 0; n < 101; n++) {
+      const p = await createPairing(f.audience);
+      const result = await f.raw(p.invitation.session, 'dapp', identity, 'PUT', '', {pairExpires: p.invitation.expires});
+      assert.equal(result.response.status, n < 100 ? 200 : 429);
+      if (n === 100) assert.equal(result.body.error, 'project_capacity');
+    }
+  } finally {await f.mf.dispose();}
+});

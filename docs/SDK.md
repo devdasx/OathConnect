@@ -8,7 +8,7 @@ Website: call `createIdentity()` for the admission proof key and `createPairing(
 
 Wallet: require an explicitly trusted relay, call `joinPairing(uri, trustedRelay)`, obtain its wallet grant with a fresh proof identity, construct `RelayClient`, and call `join(hello)`. The website polls `hello()` and authenticates it with `pairing.accept(hello)`.
 
-Construct `Session(channel, relayClient)` on both ends. Website calls `propose(capabilities)` and the wallet calls `approveSession(localDecision)`. Only the exact approved subset is usable. Each entry specifies a CAIP-2 chain, an exact address and method list. This draft expects the website to know the desired account; privacy-preserving wallet-selected account discovery is not implemented yet.
+Construct `Session(channel, relayClient, trustedProjects)` on both ends. Website calls `propose(requestedCapabilities)` and the wallet calls `approveSession(localDecision)`. A proposal specifies CAIP-2 chains and methods, and optionally exact requested accounts. The wallet selects accounts locally and shares only those the user approves. Only the exact approved chain/account/method subset is usable; no account wildcard survives negotiation.
 
 ## Signing requests
 
@@ -22,4 +22,8 @@ The test adapter demonstrates transport and approval control flow only. It does 
 
 Only one operation may run per endpoint at a time. Sessions expire after at most an hour, requests after two minutes, grants after five minutes. Refresh grants through the integrator backend without changing the proof key. Call `close()` on lock, logout, account/network changes or disconnect; revoke the local authorizer too. Endpoints do not persist encryption keys/counters. On process restart, timeout or ambiguous delivery, re-pair. Never automatically retry a request that might already have signed or broadcast.
 
-The minimal SDK polls every two seconds with bounded mailboxes. Push notifications, background wakeup, session resumption and account discovery are deliberately not advertised as completed features.
+The minimal SDK polls every two seconds with bounded mailboxes. Push notifications, background wakeup and session resumption are not implemented.
+
+## Verified peer identity
+
+Both peers sign their encrypted negotiation messages with their per-session admission proof keys. Verify the issuer against a separately trusted registry before displaying a verified integrator identity. Never auto-trust keys fetched solely from the relay being authenticated. Applications must update/revoke their pinned registries through an authenticated distribution channel. Project names come from that registry; exact website origins come from signed grants. Admission approval is not a promise that the website is safe.

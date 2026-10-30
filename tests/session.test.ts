@@ -10,9 +10,9 @@ test('end-to-end SDK negotiation and user-approved request through Cloudflare ru
     const p = await createPairing(f.audience); const joined = await joinPairing(p.uri, f.audience);
     const dc = f.client(p.invitation.session, 'dapp', await createIdentity()); const wc = f.client(p.invitation.session, 'wallet', await createIdentity());
     await dc.create(p.invitation.expires); await wc.join(joined.hello);
-    const d = new Session(await p.accept(await dc.hello()), dc); const w = new Session(joined.channel, wc);
+    const d = new Session(await p.accept(await dc.hello()), dc, f.projects); const w = new Session(joined.channel, wc, f.projects);
     const capability = {chain: 'eip155:11155111', account: '0x1234', methods: ['personal_sign']};
-    const approved = await Promise.all([d.propose([capability]), w.approveSession(async requested => requested)]);
+    const approved = await Promise.all([d.propose([{chain: capability.chain, methods: capability.methods}]), w.approveSession(async (requested, peer) => {assert.equal(peer.origin, 'https://app.example.org'); return requested.map(r => ({...r, account: capability.account}));})]);
     assert.deepEqual(approved, [[capability], [capability]]);
     let prompts = 0; let executions = 0;
     const adapter: WalletAdapter = {review: async r => ({requestDigest: await digest(canonical(r)), summary: 'Local fixture: no blockchain transaction', warnings: []}), execute: async () => {executions++; return {fixture: true};}};

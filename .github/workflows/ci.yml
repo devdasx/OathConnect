@@ -8,6 +8,15 @@ concurrency:
   group: verify-${{ github.ref }}
   cancel-in-progress: true
 jobs:
+  swift:
+    name: Swift host interoperability
+    runs-on: macos-15
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - run: swift test
   typescript:
     name: TypeScript and Cloudflare runtime
     runs-on: ubuntu-latest
@@ -26,7 +35,7 @@ jobs:
       - run: npx --no-install wrangler deploy --dry-run
         env:
           WRANGLER_SEND_METRICS: 'false'
-      - run: npm pack --workspace @oathconnect/protocol --workspace @oathconnect/sdk --pack-destination dist
+      - run: npm pack --workspace @oathconnect/protocol --workspace @oathconnect/sdk --workspace @oathconnect/thorchain --pack-destination dist
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: oathconnect-preview-packages

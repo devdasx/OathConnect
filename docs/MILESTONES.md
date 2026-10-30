@@ -10,3 +10,9 @@ Every release is a prerelease until the readiness gates are satisfied.
 6. Network qualification: per-chain real testnet evidence and THORChain example; independent audit and production decision.
 
 Unfinished milestones must not be labeled complete to justify a version tag.
+
+## Published previews
+
+- `v0.0.1-foundation`: public scope, threat model, license and release gates.
+- `v0.1.0-alpha.1`: TypeScript encrypted pairing, SDK authorization and Cloudflare relay foundation.
+- `v0.2.0-alpha.1`: signed peer identity, wallet-selected accounts, global allocation limits, Swift interoperability/authorization, THORChain read-only quote example, XRP testnet receipt and GitHub deployment pipeline. Native session completion and the production/network gates are still open.

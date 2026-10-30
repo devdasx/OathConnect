@@ -1,0 +1,384 @@
+{
+  "date": "2026-10-30",
+  "source": "Oath Wallet import catalog and EVMSendNetwork; inventory only, not chain-signing certification",
+  "chains": [
+    {
+      "id": "aptos",
+      "family": "aptos",
+      "oathCatalog": true,
+      "evmChainIdFromOath": null,
+      "transport": "generic capability/session protocol",
+      "transactionAdapter": "wallet implementation required",
+      "testnetQualification": "not completed"
+    },
+    {
+      "id": "arbitrum",
+      "family": "evm",
+      "oathCatalog": true,
+      "evmChainIdFromOath": 42161,
+      "transport": "generic capability/session protocol",
+      "transactionAdapter": "wallet implementation required",
+      "testnetQualification": "not completed"
+    },
+    {
+      "id": "arc",
+      "family": "evm",
+      "oathCatalog": true,
+      "evmChainIdFromOath": 5042,
+      "transport": "generic capability/session protocol",
+      "transactionAdapter": "wallet implementation required",
+      "testnetQualification": "not completed"
+    },
+    {
+      "id": "avalanche",
+      "family": "evm",
+      "oathCatalog": true,
+      "evmChainIdFromOath": 43114,
+      "transport": "generic capability/session protocol",
+      "transactionAdapter": "wallet implementation required",
+      "testnetQualification": "not completed"
+    },
+    {
+      "id": "base",
+      "family": "evm",
+      "oathCatalog": true,
+      "evmChainIdFromOath": 8453,
+      "transport": "generic capability/session protocol",
+      "transactionAdapter": "wallet implementation required",
+      "testnetQualification": "not completed"
+    },
+    {
+      "id": "bitcoin",
+      "family": "utxo",
+      "oathCatalog": true,
+      "evmChainIdFromOath": null,
+      "transport": "generic capability/session protocol",
+      "transactionAdapter": "wallet implementation required",
+      "testnetQualification": "not completed"
+    },
+    {
+      "id": "bitcoincash",
+      "family": "utxo",
+      "oathCatalog": true,
+      "evmChainIdFromOath": null,
+      "transport": "generic capability/session protocol",
+      "transactionAdapter": "wallet implementation required",
+      "testnetQualification": "not completed"
+    },
+    {
+      "id": "bnb",
+      "family": "evm",
+      "oathCatalog": true,
+      "evmChainIdFromOath": 56,
+      "transport": "generic capability/session protocol",
+      "transactionAdapter": "wallet implementation required",
+      "testnetQualification": "not completed"
+    },
+    {
+      "id": "dogecoin",
+      "family": "utxo",
+      "oathCatalog": true,
+      "evmChainIdFromOath": null,
+      "transport": "generic capability/session protocol",
+      "transactionAdapter": "wallet implementation required",
+      "testnetQualification": "not completed"
+    },
+    {
+      "id": "iotex",
+      "family": "evm",
+      "oathCatalog": true,
+      "evmChainIdFromOath": 4689,
+      "transport": "generic capability/session protocol",
+      "transactionAdapter": "wallet implementation required",
+      "testnetQualification": "not completed"
+    },
+    {
+      "id": "zerog",
+      "family": "evm",
+      "oathCatalog": true,
+      "evmChainIdFromOath": 16661,
+      "transport": "generic capability/session protocol",
+      "transactionAdapter": "wallet implementation required",
+      "testnetQualification": "not completed"
+    },
+    {
+      "id": "sei",
+      "family": "evm",
+      "oathCatalog": true,
+      "evmChainIdFromOath": 1329,
+      "transport": "generic capability/session protocol",
+      "transactionAdapter": "wallet implementation required",
+      "testnetQualification": "not completed"
+    },
+    {
+      "id": "chiliz",
+      "family": "evm",
+      "oathCatalog": true,
+      "evmChainIdFromOath": 88888,
+      "transport": "generic capability/session protocol",
+      "transactionAdapter": "wallet implementation required",
+      "testnetQualification": "not completed"
+    },
+    {
+      "id": "filecoin",
+      "family": "evm",
+      "oathCatalog": true,
+      "evmChainIdFromOath": 314,
+      "transport": "generic capability/session protocol",
+      "transactionAdapter": "wallet implementation required",
+      "testnetQualification": "not completed"
+    },
+    {
+      "id": "ethereum",
+      "family": "evm",
+      "oathCatalog": true,
+      "evmChainIdFromOath": 1,
+      "transport": "generic capability/session protocol",
+      "transactionAdapter": "wallet implementation required",
+      "testnetQualification": "not completed"
+    },
+    {
+      "id": "fantom",
+      "family": "evm",
+      "oathCatalog": true,
+      "evmChainIdFromOath": 250,
+      "transport": "generic capability/session protocol",
+      "transactionAdapter": "wallet implementation required",
+      "testnetQualification": "not completed"
+    },
+    {
+      "id": "flare",
+      "family": "evm",
+      "oathCatalog": true,
+      "evmChainIdFromOath": 14,
+      "transport": "generic capability/session protocol",
+      "transactionAdapter": "wallet implementation required",
+      "testnetQualification": "not completed"
+    },
+    {
+      "id": "gnosis",
+      "family": "evm",
+      "oathCatalog": true,
+      "evmChainIdFromOath": 100,
+      "transport": "generic capability/session protocol",
+      "transactionAdapter": "wallet implementation required",
+      "testnetQualification": "not completed"
+    },
+    {
+      "id": "hyperevm",
+      "family": "evm",
+      "oathCatalog": true,
+      "evmChainIdFromOath": 999,
+      "transport": "generic capability/session protocol",
+      "transactionAdapter": "wallet implementation required",
+      "testnetQualification": "not completed"
+    },
+    {
+      "id": "celo",
+      "family": "evm",
+      "oathCatalog": true,
+      "evmChainIdFromOath": 42220,
+      "transport": "generic capability/session protocol",
+      "transactionAdapter": "wallet implementation required",
+      "testnetQualification": "not completed"
+    },
+    {
+      "id": "monad",
+      "family": "evm",
+      "oathCatalog": true,
+      "evmChainIdFromOath": 143,
+      "transport": "generic capability/session protocol",
+      "transactionAdapter": "wallet implementation required",
+      "testnetQualification": "not completed"
+    },
+    {
+      "id": "unichain",
+      "family": "evm",
+      "oathCatalog": true,
+      "evmChainIdFromOath": 130,
+      "transport": "generic capability/session protocol",
+      "transactionAdapter": "wallet implementation required",
+      "testnetQualification": "not completed"
+    },
+    {
+      "id": "linea",
+      "family": "evm",
+      "oathCatalog": true,
+      "evmChainIdFromOath": 59144,
+      "transport": "generic capability/session protocol",
+      "transactionAdapter": "wallet implementation required",
+      "testnetQualification": "not completed"
+    },
+    {
+      "id": "litecoin",
+      "family": "utxo",
+      "oathCatalog": true,
+      "evmChainIdFromOath": null,
+      "transport": "generic capability/session protocol",
+      "transactionAdapter": "wallet implementation required",
+      "testnetQualification": "not completed"
+    },
+    {
+      "id": "near",
+      "family": "near",
+      "oathCatalog": true,
+      "evmChainIdFromOath": null,
+      "transport": "generic capability/session protocol",
+      "transactionAdapter": "wallet implementation required",
+      "testnetQualification": "not completed"
+    },
+    {
+      "id": "optimism",
+      "family": "evm",
+      "oathCatalog": true,
+      "evmChainIdFromOath": 10,
+      "transport": "generic capability/session protocol",
+      "transactionAdapter": "wallet implementation required",
+      "testnetQualification": "not completed"
+    },
+    {
+      "id": "polygon",
+      "family": "evm",
+      "oathCatalog": true,
+      "evmChainIdFromOath": 137,
+      "transport": "generic capability/session protocol",
+      "transactionAdapter": "wallet implementation required",
+      "testnetQualification": "not completed"
+    },
+    {
+      "id": "robinhood",
+      "family": "evm",
+      "oathCatalog": true,
+      "evmChainIdFromOath": 4663,
+      "transport": "generic capability/session protocol",
+      "transactionAdapter": "wallet implementation required",
+      "testnetQualification": "not completed"
+    },
+    {
+      "id": "scroll",
+      "family": "evm",
+      "oathCatalog": true,
+      "evmChainIdFromOath": 534352,
+      "transport": "generic capability/session protocol",
+      "transactionAdapter": "wallet implementation required",
+      "testnetQualification": "not completed"
+    },
+    {
+      "id": "solana",
+      "family": "solana",
+      "oathCatalog": true,
+      "evmChainIdFromOath": null,
+      "transport": "generic capability/session protocol",
+      "transactionAdapter": "wallet implementation required",
+      "testnetQualification": "not completed"
+    },
+    {
+      "id": "somnia",
+      "family": "evm",
+      "oathCatalog": true,
+      "evmChainIdFromOath": 5031,
+      "transport": "generic capability/session protocol",
+      "transactionAdapter": "wallet implementation required",
+      "testnetQualification": "not completed"
+    },
+    {
+      "id": "story",
+      "family": "evm",
+      "oathCatalog": true,
+      "evmChainIdFromOath": 1514,
+      "transport": "generic capability/session protocol",
+      "transactionAdapter": "wallet implementation required",
+      "testnetQualification": "not completed"
+    },
+    {
+      "id": "polkadot",
+      "family": "polkadot",
+      "oathCatalog": true,
+      "evmChainIdFromOath": null,
+      "transport": "generic capability/session protocol",
+      "transactionAdapter": "wallet implementation required",
+      "testnetQualification": "not completed"
+    },
+    {
+      "id": "stellar",
+      "family": "stellar",
+      "oathCatalog": true,
+      "evmChainIdFromOath": null,
+      "transport": "generic capability/session protocol",
+      "transactionAdapter": "wallet implementation required",
+      "testnetQualification": "not completed"
+    },
+    {
+      "id": "sui",
+      "family": "sui",
+      "oathCatalog": true,
+      "evmChainIdFromOath": null,
+      "transport": "generic capability/session protocol",
+      "transactionAdapter": "wallet implementation required",
+      "testnetQualification": "not completed"
+    },
+    {
+      "id": "taiko",
+      "family": "evm",
+      "oathCatalog": true,
+      "evmChainIdFromOath": 167000,
+      "transport": "generic capability/session protocol",
+      "transactionAdapter": "wallet implementation required",
+      "testnetQualification": "not completed"
+    },
+    {
+      "id": "telos",
+      "family": "evm",
+      "oathCatalog": true,
+      "evmChainIdFromOath": 40,
+      "transport": "generic capability/session protocol",
+      "transactionAdapter": "wallet implementation required",
+      "testnetQualification": "not completed"
+    },
+    {
+      "id": "thorchain",
+      "family": "cosmos",
+      "oathCatalog": true,
+      "evmChainIdFromOath": null,
+      "transport": "generic capability/session protocol",
+      "transactionAdapter": "wallet implementation required",
+      "testnetQualification": "not completed"
+    },
+    {
+      "id": "ton",
+      "family": "ton",
+      "oathCatalog": true,
+      "evmChainIdFromOath": null,
+      "transport": "generic capability/session protocol",
+      "transactionAdapter": "wallet implementation required",
+      "testnetQualification": "not completed"
+    },
+    {
+      "id": "tron",
+      "family": "tron",
+      "oathCatalog": true,
+      "evmChainIdFromOath": null,
+      "transport": "generic capability/session protocol",
+      "transactionAdapter": "wallet implementation required",
+      "testnetQualification": "not completed"
+    },
+    {
+      "id": "xlayer",
+      "family": "evm",
+      "oathCatalog": true,
+      "evmChainIdFromOath": 196,
+      "transport": "generic capability/session protocol",
+      "transactionAdapter": "wallet implementation required",
+      "testnetQualification": "not completed"
+    },
+    {
+      "id": "xrpl",
+      "family": "xrpl",
+      "oathCatalog": true,
+      "evmChainIdFromOath": null,
+      "transport": "generic capability/session protocol",
+      "transactionAdapter": "wallet implementation required",
+      "testnetQualification": "XRP Testnet Payment confirmed; local relay only; see xrpl-testnet.json"
+    }
+  ]
+}

@@ -9,7 +9,7 @@ export async function fixture() {
   const bundle = await build({entryPoints: ['relay/src/worker.ts'], bundle: true, format: 'esm', platform: 'browser', target: 'es2023', write: false,
     plugins: [{name: 'test-registry', setup(b) {b.onLoad({filter: /registry\/projects\.json$/}, () => ({contents: JSON.stringify(projects), loader: 'json'}));}}]});
   const mf = new Miniflare(convertV4MiniflareOptions({name: 'relay', modules: true, script: bundle.outputFiles[0]!.text, compatibilityDate: '2026-07-01',
-    durableObjects: {SESSIONS: {className: 'RelaySession', useSQLite: true}}, bindings: {PUBLIC_ORIGIN: audience, RELEASE_SHA: 'test', MODE: 'test'},
+    durableObjects: {SESSIONS: {className: 'RelaySession', useSQLite: true}, PROJECTS: {className: 'ProjectQuota', useSQLite: true}}, bindings: {PUBLIC_ORIGIN: audience, RELEASE_SHA: 'test', MODE: 'test'},
     ratelimits: {IP_LIMIT: {namespace_id: '1', simple: {limit: 10000, period: 60}}, PROJECT_LIMIT: {namespace_id: '2', simple: {limit: 10000, period: 60}}}}));
   const fetcher: typeof fetch = async (input, init) => {
     const response = await mf.dispatchFetch(String(input), init as Parameters<typeof mf.dispatchFetch>[1]);
@@ -23,5 +23,5 @@ export async function fixture() {
     return {response, body: await response.json() as Record<string, unknown>, token, proof};
   }
   const client = (session: string, role: Role, identity: ClientIdentity) => new RelayClient({relay: audience, session, role, identity, getGrant: () => grant(session, role, identity), fetch: fetcher, ...(role === 'dapp' ? {origin} : {})});
-  return {mf, audience, raw, client, fetcher};
+  return {mf, audience, raw, client, fetcher, projects};
 }

@@ -1,9 +1,24 @@
-import {canonical, createProof, parseJSON, ProtocolError, record, relayOrigin, requireThat, type ClientIdentity, type Frame, type Hello, type Role} from '@oathconnect/protocol';
+import {canonical, createProof, parseJSON, ProtocolError, record, relayOrigin, requireThat, verifyGrant, verifyProof, type ClientIdentity, type Frame, type Hello, type Project, type Role} from '@oathconnect/protocol';
 
 export interface RelayOptions {relay: string; session: string; role: Role; identity: ClientIdentity; getGrant: () => Promise<string>; fetch?: typeof globalThis.fetch; origin?: string}
+export interface PeerIdentity {project: string; name: string; origin: string; role: Role}
+export interface Attestation {origin: string; grant: string; proof: string}
 export class RelayClient {
   readonly #options: RelayOptions; #closed = false;
   constructor(options: RelayOptions) { relayOrigin(options.relay); this.#options = {...options}; }
+  async attest(value: unknown): Promise<Attestation> {
+    const o = this.#options, grant = await o.getGrant();
+    return {origin: o.origin ?? '', grant, proof: await createProof(grant, o.identity, 'ATTEST', `/v1/sessions/${o.session}`, canonical(value))};
+  }
+  async identify(value: unknown, attestation: unknown, projects: readonly Project[], expectedRole: Role): Promise<PeerIdentity> {
+    record(attestation, ['origin', 'grant', 'proof']);
+    requireThat(typeof attestation.origin === 'string' && typeof attestation.grant === 'string' && typeof attestation.proof === 'string', 'invalid_attestation');
+    const o = this.#options;
+    const grant = await verifyGrant(attestation.grant, projects, o.relay, attestation.origin || null);
+    requireThat(grant.role === expectedRole && grant.session === o.session, 'identity_mismatch');
+    await verifyProof(attestation.proof, grant, attestation.grant, 'ATTEST', `/v1/sessions/${o.session}`, canonical(value));
+    return {project: grant.project, name: projects.find(p => p.id === grant.project)!.name, origin: grant.origin, role: grant.role};
+  }
   async call(method: string, suffix = '', payload?: unknown): Promise<unknown> {
     requireThat(!this.#closed, 'session_closed');
     const o = this.#options; const path = `/v1/sessions/${o.session}${suffix}`;

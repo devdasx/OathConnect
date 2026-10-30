@@ -51,11 +51,13 @@ export const opposite = (value: Role): Role => value === 'dapp' ? 'wallet' : 'da
 /** A bounded, deterministic serialization for request digests, not general-purpose JSON. */
 export function canonical(value: unknown, depth = 0): string {
   requireThat(depth <= 24, 'too_deep');
-  if (value === null || typeof value === 'boolean' || typeof value === 'string') return JSON.stringify(value);
+  if (typeof value === 'string') { requireThat(!/[\uD800-\uDFFF]/u.test(value), 'invalid_unicode'); return JSON.stringify(value); }
+  if (value === null || typeof value === 'boolean') return JSON.stringify(value);
   if (typeof value === 'number') { requireThat(Number.isSafeInteger(value), 'unsafe_number'); return JSON.stringify(value); }
   if (Array.isArray(value)) { requireThat(value.length <= 1024); return `[${value.map(v => canonical(v, depth + 1)).join(',')}]`; }
   requireThat(value && typeof value === 'object' && Object.getPrototypeOf(value) === Object.prototype);
   const entries = Object.entries(value).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0);
   requireThat(entries.length <= 128);
+  requireThat(entries.every(([key]) => /^[\x20-\x7E]{1,128}$/.test(key)), 'invalid_object_key');
   return `{${entries.map(([k, v]) => `${JSON.stringify(k)}:${canonical(v, depth + 1)}`).join(',')}}`;
 }
