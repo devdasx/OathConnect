@@ -17,7 +17,7 @@
       "oathCatalog": true,
       "evmChainIdFromOath": 42161,
       "transport": "generic capability/session protocol",
-      "transactionAdapter": "wallet implementation required",
+      "transactionAdapter": "Restricted @oathconnect/evm preview available; this network and its fee model are not qualified",
       "testnetQualification": "not completed"
     },
     {
@@ -26,7 +26,7 @@
       "oathCatalog": true,
       "evmChainIdFromOath": 5042,
       "transport": "generic capability/session protocol",
-      "transactionAdapter": "wallet implementation required",
+      "transactionAdapter": "Restricted @oathconnect/evm preview available; this network and its fee model are not qualified",
       "testnetQualification": "not completed"
     },
     {
@@ -35,7 +35,7 @@
       "oathCatalog": true,
       "evmChainIdFromOath": 43114,
       "transport": "generic capability/session protocol",
-      "transactionAdapter": "wallet implementation required",
+      "transactionAdapter": "Restricted @oathconnect/evm preview available; this network and its fee model are not qualified",
       "testnetQualification": "not completed"
     },
     {
@@ -44,7 +44,7 @@
       "oathCatalog": true,
       "evmChainIdFromOath": 8453,
       "transport": "generic capability/session protocol",
-      "transactionAdapter": "wallet implementation required",
+      "transactionAdapter": "Restricted @oathconnect/evm preview available; this network and its fee model are not qualified",
       "testnetQualification": "not completed"
     },
     {
@@ -71,7 +71,7 @@
       "oathCatalog": true,
       "evmChainIdFromOath": 56,
       "transport": "generic capability/session protocol",
-      "transactionAdapter": "wallet implementation required",
+      "transactionAdapter": "Restricted @oathconnect/evm preview available; this network and its fee model are not qualified",
       "testnetQualification": "not completed"
     },
     {
@@ -89,7 +89,7 @@
       "oathCatalog": true,
       "evmChainIdFromOath": 4689,
       "transport": "generic capability/session protocol",
-      "transactionAdapter": "wallet implementation required",
+      "transactionAdapter": "Restricted @oathconnect/evm preview available; this network and its fee model are not qualified",
       "testnetQualification": "not completed"
     },
     {
@@ -98,7 +98,7 @@
       "oathCatalog": true,
       "evmChainIdFromOath": 16661,
       "transport": "generic capability/session protocol",
-      "transactionAdapter": "wallet implementation required",
+      "transactionAdapter": "Restricted @oathconnect/evm preview available; this network and its fee model are not qualified",
       "testnetQualification": "not completed"
     },
     {
@@ -107,7 +107,7 @@
       "oathCatalog": true,
       "evmChainIdFromOath": 1329,
       "transport": "generic capability/session protocol",
-      "transactionAdapter": "wallet implementation required",
+      "transactionAdapter": "Restricted @oathconnect/evm preview available; this network and its fee model are not qualified",
       "testnetQualification": "not completed"
     },
     {
@@ -116,7 +116,7 @@
       "oathCatalog": true,
       "evmChainIdFromOath": 88888,
       "transport": "generic capability/session protocol",
-      "transactionAdapter": "wallet implementation required",
+      "transactionAdapter": "Restricted @oathconnect/evm preview available; this network and its fee model are not qualified",
       "testnetQualification": "not completed"
     },
     {
@@ -125,7 +125,7 @@
       "oathCatalog": true,
       "evmChainIdFromOath": 314,
       "transport": "generic capability/session protocol",
-      "transactionAdapter": "wallet implementation required",
+      "transactionAdapter": "Restricted @oathconnect/evm preview available; this network and its fee model are not qualified",
       "testnetQualification": "not completed"
     },
     {
@@ -134,7 +134,7 @@
       "oathCatalog": true,
       "evmChainIdFromOath": 1,
       "transport": "generic capability/session protocol",
-      "transactionAdapter": "wallet implementation required",
+      "transactionAdapter": "Restricted @oathconnect/evm preview available; this network and its fee model are not qualified",
       "testnetQualification": "not completed"
     },
     {
@@ -143,7 +143,7 @@
       "oathCatalog": true,
       "evmChainIdFromOath": 250,
       "transport": "generic capability/session protocol",
-      "transactionAdapter": "wallet implementation required",
+      "transactionAdapter": "Restricted @oathconnect/evm preview available; this network and its fee model are not qualified",
       "testnetQualification": "not completed"
     },
     {
@@ -152,7 +152,7 @@
       "oathCatalog": true,
       "evmChainIdFromOath": 14,
       "transport": "generic capability/session protocol",
-      "transactionAdapter": "wallet implementation required",
+      "transactionAdapter": "Restricted @oathconnect/evm preview available; this network and its fee model are not qualified",
       "testnetQualification": "not completed"
     },
     {
@@ -161,7 +161,7 @@
       "oathCatalog": true,
       "evmChainIdFromOath": 100,
       "transport": "generic capability/session protocol",
-      "transactionAdapter": "wallet implementation required",
+      "transactionAdapter": "Restricted @oathconnect/evm preview available; this network and its fee model are not qualified",
       "testnetQualification": "not completed"
     },
     {
@@ -170,7 +170,7 @@
       "oathCatalog": true,
       "evmChainIdFromOath": 999,
       "transport": "generic capability/session protocol",
-      "transactionAdapter": "wallet implementation required",
+      "transactionAdapter": "Restricted @oathconnect/evm preview available; this network and its fee model are not qualified",
       "testnetQualification": "not completed"
     },
     {
@@ -179,7 +179,7 @@
       "oathCatalog": true,
       "evmChainIdFromOath": 42220,
       "transport": "generic capability/session protocol",
-      "transactionAdapter": "wallet implementation required",
+      "transactionAdapter": "Restricted @oathconnect/evm preview available; this network and its fee model are not qualified",
       "testnetQualification": "not completed"
     },
     {
@@ -188,7 +188,7 @@
       "oathCatalog": true,
       "evmChainIdFromOath": 143,
       "transport": "generic capability/session protocol",
-      "transactionAdapter": "wallet implementation required",
+      "transactionAdapter": "Restricted @oathconnect/evm preview available; this network and its fee model are not qualified",
       "testnetQualification": "not completed"
     },
     {
@@ -197,7 +197,7 @@
       "oathCatalog": true,
       "evmChainIdFromOath": 130,
       "transport": "generic capability/session protocol",
-      "transactionAdapter": "wallet implementation required",
+      "transactionAdapter": "Restricted @oathconnect/evm preview available; this network and its fee model are not qualified",
       "testnetQualification": "not completed"
     },
     {
@@ -206,7 +206,7 @@
       "oathCatalog": true,
       "evmChainIdFromOath": 59144,
       "transport": "generic capability/session protocol",
-      "transactionAdapter": "wallet implementation required",
+      "transactionAdapter": "Restricted @oathconnect/evm preview available; this network and its fee model are not qualified",
       "testnetQualification": "not completed"
     },
     {
@@ -233,7 +233,7 @@
       "oathCatalog": true,
       "evmChainIdFromOath": 10,
       "transport": "generic capability/session protocol",
-      "transactionAdapter": "wallet implementation required",
+      "transactionAdapter": "Restricted @oathconnect/evm preview available; this network and its fee model are not qualified",
       "testnetQualification": "not completed"
     },
     {
@@ -242,7 +242,7 @@
       "oathCatalog": true,
       "evmChainIdFromOath": 137,
       "transport": "generic capability/session protocol",
-      "transactionAdapter": "wallet implementation required",
+      "transactionAdapter": "Restricted @oathconnect/evm preview available; this network and its fee model are not qualified",
       "testnetQualification": "not completed"
     },
     {
@@ -251,7 +251,7 @@
       "oathCatalog": true,
       "evmChainIdFromOath": 4663,
       "transport": "generic capability/session protocol",
-      "transactionAdapter": "wallet implementation required",
+      "transactionAdapter": "Restricted @oathconnect/evm preview available; this network and its fee model are not qualified",
       "testnetQualification": "not completed"
     },
     {
@@ -260,7 +260,7 @@
       "oathCatalog": true,
       "evmChainIdFromOath": 534352,
       "transport": "generic capability/session protocol",
-      "transactionAdapter": "wallet implementation required",
+      "transactionAdapter": "Restricted @oathconnect/evm preview available; this network and its fee model are not qualified",
       "testnetQualification": "not completed"
     },
     {
@@ -278,7 +278,7 @@
       "oathCatalog": true,
       "evmChainIdFromOath": 5031,
       "transport": "generic capability/session protocol",
-      "transactionAdapter": "wallet implementation required",
+      "transactionAdapter": "Restricted @oathconnect/evm preview available; this network and its fee model are not qualified",
       "testnetQualification": "not completed"
     },
     {
@@ -287,7 +287,7 @@
       "oathCatalog": true,
       "evmChainIdFromOath": 1514,
       "transport": "generic capability/session protocol",
-      "transactionAdapter": "wallet implementation required",
+      "transactionAdapter": "Restricted @oathconnect/evm preview available; this network and its fee model are not qualified",
       "testnetQualification": "not completed"
     },
     {
@@ -306,7 +306,7 @@
       "evmChainIdFromOath": null,
       "transport": "generic capability/session protocol",
       "transactionAdapter": "wallet implementation required",
-      "testnetQualification": "Fixed Stellar Testnet Payment confirmed through local relay; see stellar-testnet.json; deployed relay and general-purpose adapter remain open"
+      "testnetQualification": "Fixed Stellar Testnet Payment confirmed through local and deployed relay; see stellar-testnet.json and stellar-testnet-live.json; general-purpose adapter remains open"
     },
     {
       "id": "sui",
@@ -315,7 +315,7 @@
       "evmChainIdFromOath": null,
       "transport": "generic capability/session protocol",
       "transactionAdapter": "wallet implementation required",
-      "testnetQualification": "Fixed Sui Testnet one-MIST transfer confirmed through local relay; see sui-testnet.json; deployed relay and general-purpose adapter remain open"
+      "testnetQualification": "Fixed Sui Testnet one-MIST transfer confirmed through local and deployed relay; see sui-testnet.json and sui-testnet-live.json; general-purpose adapter remains open"
     },
     {
       "id": "taiko",
@@ -323,7 +323,7 @@
       "oathCatalog": true,
       "evmChainIdFromOath": 167000,
       "transport": "generic capability/session protocol",
-      "transactionAdapter": "wallet implementation required",
+      "transactionAdapter": "Restricted @oathconnect/evm preview available; this network and its fee model are not qualified",
       "testnetQualification": "not completed"
     },
     {
@@ -332,7 +332,7 @@
       "oathCatalog": true,
       "evmChainIdFromOath": 40,
       "transport": "generic capability/session protocol",
-      "transactionAdapter": "wallet implementation required",
+      "transactionAdapter": "Restricted @oathconnect/evm preview available; this network and its fee model are not qualified",
       "testnetQualification": "not completed"
     },
     {
@@ -368,7 +368,7 @@
       "oathCatalog": true,
       "evmChainIdFromOath": 196,
       "transport": "generic capability/session protocol",
-      "transactionAdapter": "wallet implementation required",
+      "transactionAdapter": "Restricted @oathconnect/evm preview available; this network and its fee model are not qualified",
       "testnetQualification": "not completed"
     },
     {

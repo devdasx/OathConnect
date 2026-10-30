@@ -1,6 +1,6 @@
 import {build} from 'esbuild';
 import {existsSync, readFileSync, mkdirSync, copyFileSync, writeFileSync} from 'node:fs';
-for (const name of ['protocol', 'sdk', 'thorchain']) {
+for (const name of ['protocol', 'sdk', 'thorchain', 'evm']) {
   const entry = `packages/${name}/src/index.ts`;
   if (existsSync(entry)) await build({entryPoints: [entry], outfile: `packages/${name}/dist/index.js`, bundle: true, format: 'esm', platform: 'neutral', target: 'es2023', packages: 'external', sourcemap: true});
 }

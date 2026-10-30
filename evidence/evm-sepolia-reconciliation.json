@@ -1,0 +1,26 @@
+{
+  "checked": "2026-10-30T17:53:45.023Z",
+  "chain": "eip155:11155111",
+  "hash": "0xf53ab1582782cea4dc9174da681b82ee679c480a4b6a608b421a3887d7514336",
+  "operation": "read-only reconciliation; no signing or resubmission",
+  "readings": [
+    {
+      "endpoint": "https://gateway.tenderly.co/public/sepolia",
+      "chainId": "0xaa36a7",
+      "transaction": null,
+      "receipt": null,
+      "minedNonce": "0x0",
+      "pendingNonce": "0x0"
+    },
+    {
+      "endpoint": "https://ethereum-sepolia-rpc.publicnode.com",
+      "chainId": "0xaa36a7",
+      "transaction": null,
+      "receipt": null,
+      "minedNonce": "0x0",
+      "pendingNonce": "0x0"
+    }
+  ],
+  "transactionConfirmed": false,
+  "productionReady": false
+}

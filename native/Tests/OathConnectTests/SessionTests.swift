@@ -33,8 +33,8 @@ private actor TestRelay: WalletRelay {
 }
 private actor SessionAdapter: WalletAdapter {
     var executed = 0
-    func review(_ request: SigningRequest) -> TransactionReview {.init(requestDigest:request.digest,summary:"Test-only action",warnings:[])}
-    func execute(_ request: SigningRequest) -> JSONValue {executed += 1; return .string("test-result")}
+    func review(_ request: SigningRequest, context: ExecutionContext) async throws -> TransactionReview {try await context.checkActive(); return .init(requestDigest:request.digest,summary:"Test-only action",warnings:[])}
+    func execute(_ request: SigningRequest, context: ExecutionContext) async throws -> JSONValue {try await context.checkActive(); executed += 1; return .string("test-result")}
     func count() -> Int {executed}
 }
 final class SessionTests: XCTestCase, @unchecked Sendable {
@@ -66,7 +66,7 @@ final class SessionTests: XCTestCase, @unchecked Sendable {
             XCTAssertNil(requested[0].account); XCTAssertEqual(peer.name,"Approved test website"); return [cap]
         }
         XCTAssertEqual(approved,[cap]); let adapter = SessionAdapter()
-        let authorizer = try WalletAuthorizer(capabilities:[cap],adapters:[cap.chain+"/test_sign":adapter],approve:{_,review in .init(approved:true,requestDigest:review.requestDigest)})
+        let authorizer = try WalletAuthorizer(capabilities:[cap],adapters:[cap.chain+"/test_sign":adapter],approve:{_,review,_ in .init(approved:true,requestDigest:review.requestDigest)})
         try await session.serveOnce(authorizer:authorizer)
         let count = await adapter.count(), replies = await relay.count(), last = await relay.last()
         XCTAssertEqual(count,1); XCTAssertEqual(replies,2); XCTAssertEqual(last?.fields?["result"],.string("test-result")); await session.close()
@@ -75,7 +75,7 @@ final class SessionTests: XCTestCase, @unchecked Sendable {
         let (session, relay, cap) = try fixture(chain:"eip155:1"); try await session.join()
         _ = try await session.approveSession {_,_ in [cap]}
         let adapter = SessionAdapter(), wider = try Capability(chain:"eip155:1",account:"test-account",methods:["test_sign"])
-        let authorizer = try WalletAuthorizer(capabilities:[wider],adapters:[wider.chain+"/test_sign":adapter],approve:{_,review in .init(approved:true,requestDigest:review.requestDigest)})
+        let authorizer = try WalletAuthorizer(capabilities:[wider],adapters:[wider.chain+"/test_sign":adapter],approve:{_,review,_ in .init(approved:true,requestDigest:review.requestDigest)})
         do {try await session.serveOnce(authorizer:authorizer); XCTFail("Unauthorized request accepted")} catch {}
         let count = await adapter.count(), replies = await relay.count(); XCTAssertEqual(count,0); XCTAssertEqual(replies,1)
     }
@@ -84,7 +84,7 @@ final class SessionTests: XCTestCase, @unchecked Sendable {
         _ = try await session.approveSession {_,_ in [cap]}
         await relay.setAcknowledgementHook {await session.close()}
         let adapter = SessionAdapter()
-        let authorizer = try WalletAuthorizer(capabilities:[cap],adapters:[cap.chain+"/test_sign":adapter],approve:{_,review in .init(approved:true,requestDigest:review.requestDigest)})
+        let authorizer = try WalletAuthorizer(capabilities:[cap],adapters:[cap.chain+"/test_sign":adapter],approve:{_,review,_ in .init(approved:true,requestDigest:review.requestDigest)})
         do {try await session.serveOnce(authorizer:authorizer); XCTFail("Closed session accepted request")} catch {}
         let executed = await adapter.count(); XCTAssertEqual(executed,0)
     }
@@ -97,7 +97,7 @@ final class SessionTests: XCTestCase, @unchecked Sendable {
         let (session, relay, cap) = try fixture(lifetime: 5); try await session.join()
         _ = try await session.approveSession {_,_ in [cap]}
         let expires = relay.expires, adapter = SessionAdapter()
-        let authorizer = try WalletAuthorizer(capabilities:[cap],adapters:[cap.chain+"/test_sign":adapter]) {_,review in
+        let authorizer = try WalletAuthorizer(capabilities:[cap],adapters:[cap.chain+"/test_sign":adapter]) {_,review,_ in
             try await Task.sleep(for: .seconds(max(0, expires - timestamp()) + 1))
             return .init(approved:true,requestDigest:review.requestDigest)
         }

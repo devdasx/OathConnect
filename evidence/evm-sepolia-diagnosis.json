@@ -1,0 +1,23 @@
+{
+  "date": "2026-10-30",
+  "scope": "Read-only diagnosis of the first Sepolia fixture rejection; not a signing or broadcast success",
+  "firstAttempt": "evm-sepolia.json",
+  "fundingTransaction": "0x77a974442e28b5baaec790baed5bf2ee5001da3de4148ce145bda331fc5e717a",
+  "fundingReceiptStatus": "0x1",
+  "fundingNativeTransferLogs": 1,
+  "observations": [
+    "Both Tenderly and PublicNode rejected one-wei eth_call to a fresh account with 21,000 or 100,000 gas: provider code -32003, out of gas",
+    "Ethereum Foundation documents Sepolia Glamsterdam activation on 2026-10-06, including new state-creation charging and native ETH transfer logs",
+    "After restricting native recipients to existing accounts and excluding zero-value/self transfers, reusable EvmAdapter.review passed against current canonical Sepolia state using public faucet accounts, with signing/broadcast hooks that always throw"
+  ],
+  "networkIdentity": "chain 11155111 and pinned Sepolia genesis verified",
+  "signingPerformed": false,
+  "broadcastPerformed": false,
+  "sources": [
+    "https://blog.ethereum.org/2026/09/17/glamsterdam-testnet-announcement",
+    "https://eips.ethereum.org/EIPS/eip-2780",
+    "https://eips.ethereum.org/EIPS/eip-8037",
+    "https://eips.ethereum.org/EIPS/eip-7708"
+  ],
+  "productionReady": false
+}

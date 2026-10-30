@@ -26,3 +26,34 @@ THORChain documentation retrieved 2026-10-30 describes stagenet endpoints as tra
 - A separate Sui Testnet transfer then completed through the deployed relay in checkpoint 400956792 with the same fixed policy and one approval/execution. See [live receipt](../evidence/sui-testnet-live.json). This does not certify other transaction types or a general-purpose signing adapter.
 - Solana devnet network identity was verified, but the official free-funding request returned HTTP 410 before any signing; see [attempt](../evidence/solana-devnet.json). Chains beyond XRP, Stellar and Sui, and every THORChain swap, remain unverified. Generic chain identifiers do not establish adapter coverage.
 - GitHub verification and deployment succeeded. Disposable one-hour validation identities were used for the live tests and are disabled in this registry. No third-party integrator is approved. Independent audit, load/abuse qualification and production approval remain open.
+
+## EVM and execution context preview
+
+The 0.3 preview adds a restricted reusable EVM adapter for native transfers and
+wallet-allowlisted ERC-20 transfer/approval calls, with exact-byte signature
+verification, network/state checks, bounded fees and single-attempt submission.
+It requires wallet-qualified gas-limit-times-price fee bounds; rollups and other fee
+models remain unsupported. See [adapter scope and trust limits](../packages/evm/README.md).
+Host tests are not evidence of every EVM network or contract's behavior.
+
+The funded Sepolia fixture first rejected a new recipient before approval or
+signing because the network's account-creation gas requirements had changed.
+The corrected fixture then reached one approval, signature and submission
+attempt, but no receipt was returned. Two providers subsequently returned no
+transaction or receipt and an unchanged sender nonce. This is an unconfirmed
+attempt, not a passed test; the fixture did not resubmit. See the
+[attempt](../evidence/evm-sepolia.json),
+[read-only reconciliation](../evidence/evm-sepolia-reconciliation.json) and
+[gas diagnosis](../evidence/evm-sepolia-diagnosis.json). The original attempt did
+not retain the provider rejection code or submission result; subsequent fixture
+code records only safe status, method and numeric error context.
+
+TypeScript and Swift adapter/approval callbacks receive a request execution
+context that becomes invalid on closure, expiry or completion. Cooperative checks
+after asynchronous signing prevent subsequent broadcast. They cannot retract a
+submission already dispatched. Wallet lock enforcement and durable reconciliation
+of uncertain submissions remain integrator responsibilities.
+
+The current source passed 46 TypeScript tests, 16 native SDK host tests, one
+native fixture host test and generic iOS compilation. No simulator or physical
+device was used. This is internal validation, not an independent audit.

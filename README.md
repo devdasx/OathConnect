@@ -7,6 +7,7 @@ An independent, open-source connection protocol for websites and wallets. No Wal
 ## Scope
 
 - Browser/Node TypeScript protocol and SDK packages; native Swift interoperability package.
+- Restricted [EVM transaction adapter](packages/evm/README.md) with exact-byte signature verification and wallet-owned network/token policy.
 - End-to-end encrypted, short-lived sessions; wallet-controlled chain/account/method permissions; explicit per-request authorization.
 - Cloudflare Workers relay with Durable Objects; approved integrator admission, bounded encrypted mailboxes, revocation and expiry.
 - Public source, protocol, threat model, approval registry, build workflows, release tags, and test evidence.

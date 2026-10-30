@@ -1,0 +1,59 @@
+{
+  "baselineCommit": "416442316c992fffa7aba436e025c0cef9fb1410",
+  "version": "0.3.0-alpha.1",
+  "scope": "Restricted EVM adapter and cooperative execution lifetime checks by the implementation agent; not an independent audit",
+  "changes": [
+    "Strict legacy/EIP-1559 transaction decoding, canonical ERC-20 transfer/approval decoding and exact unsigned-byte comparison after signature recovery",
+    "Wallet-owned immutable chain/genesis/token policy; canonical-block state checks, code hashes, simulation, fee/balance/nonce bounds and single-attempt submission",
+    "Execution contexts passed through TypeScript and Swift review, approval and execution; closure/expiry/completion invalidate the context; adapters check after asynchronous work before broadcasting"
+  ],
+  "adversarialCases": [
+    "Changed chain, sender, nonce, destination, amount, calldata, gas or fee in signed bytes",
+    "Malformed quantities, hidden authorization fields, unsupported transaction types and unknown contracts",
+    "Wrong genesis, stale state, reorg or wrong block height, sender delegation, changed token code and false simulation",
+    "Unbounded allowances and nonzero-to-nonzero approvals",
+    "Closure or expiry during asynchronous signing; native task cancellation during execution",
+    "Concurrent execution of one nonce; uncertain submission with no automatic retry",
+    "RPC mismatched response IDs, oversized data, raw error redaction and aborted calls",
+    "New native recipient, zero-value and self transfers under EIP-2780/EIP-8037",
+    "Malformed signature recovery errors are converted to fixed protocol codes without library data; unlimited allowance sentinel is rejected even in wallet policy",
+    "Owning-request cancellation reaches a native adapter running in a detached task; reproduced failure before the request-wide lifetime flag fix"
+  ],
+  "checks": {
+    "typescript": {
+      "tests": 46,
+      "failed": 0
+    },
+    "swiftHost": {
+      "sdkTests": 16,
+      "fixtureTests": 1,
+      "failed": 0
+    },
+    "javascriptFixtureTests": {
+      "tests": 3,
+      "failed": 0
+    },
+    "genericIOSBuild": "passed",
+    "dependencyAudit": "zero reported vulnerabilities in root workspace",
+    "cloudflareDryRun": "passed",
+    "simulator": "not run",
+    "physicalDevice": "not run"
+  },
+  "limits": [
+    "Execution contexts are cooperative and cannot undo an already dispatched signature or network submission",
+    "Restricted EVM methods only; arbitrary contract calls, THORChain routers, permits, messages, blobs and delegated accounts are unsupported",
+    "Gas-limit-times-price fee policy requires separate network qualification; no rollup data fee support",
+    "RPC answers are not consensus proofs, and token bytecode pins do not attest implementation/storage or future behavior",
+    "Attempted nonce memory is not durable; wallet integrations must coordinate nonces and persist privacy-safe submission evidence",
+    "Host tests do not establish live network or token qualification; see separate dated network receipts"
+  ],
+  "productionReady": false,
+  "independentAuditCompleted": false,
+  "oathWalletIntegrated": false,
+  "networkFinding": {
+    "network": "Sepolia",
+    "observed": "Funded fixture rejected eth_call before approval/signing: additional state gas for a new recipient under Glamsterdam",
+    "change": "Keep 21,000-gas bound for positive transfers to existing different accounts; reject new-account, zero-value and self transfers; validate EIP-7708 system transfer log in fixture",
+    "source": "https://blog.ethereum.org/2026/09/17/glamsterdam-testnet-announcement"
+  }
+}

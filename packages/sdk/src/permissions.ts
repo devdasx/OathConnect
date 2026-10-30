@@ -5,11 +5,18 @@ export interface RequestedCapability {chain: string; methods: string[]; account?
 export interface SigningRequest {type: 'request'; id: string; chain: string; account: string; method: string; params: unknown; expires: number}
 export interface Review {requestDigest: string; summary: string; warnings: string[]}
 export interface Approval {approved: boolean; requestDigest: string}
+export interface ExecutionContext {
+  /** Earliest of the request and owning session deadlines, in Unix seconds. */
+  readonly deadline: number;
+  readonly signal: AbortSignal;
+  /** Check immediately before each irreversible action, including after awaits. */
+  assertActive(): void;
+}
 export interface WalletAdapter {
   /** Must decode actual bytes, enforce network/account, and describe all signing effects. Fail closed for unknown transactions. */
-  review(request: Readonly<SigningRequest>): Promise<Review>;
+  review(request: Readonly<SigningRequest>, context: Readonly<ExecutionContext>): Promise<Review>;
   /** Receives the same deeply frozen request that was reviewed. Never consult mutable website-supplied state. */
-  execute(request: Readonly<SigningRequest>): Promise<unknown>;
+  execute(request: Readonly<SigningRequest>, context: Readonly<ExecutionContext>): Promise<unknown>;
 }
 export function validateCapabilities(value: unknown): Capability[] {
   requireThat(Array.isArray(value) && value.length > 0 && value.length <= 64, 'invalid_capabilities');
@@ -52,10 +59,11 @@ function deepFreeze(value: unknown): unknown {
 /** All requests, including message signing, require an explicit local decision. */
 export class WalletAuthorizer {
   readonly #capabilities: Capability[]; readonly #seen = new Set<string>(); #closed = false; #busy = false;
-  constructor(capabilities: Capability[], private readonly adapters: ReadonlyMap<string, WalletAdapter>, private readonly approve: (request: Readonly<SigningRequest>, review: Readonly<Review>) => Promise<Approval>) {
+  #controller: AbortController | undefined;
+  constructor(capabilities: Capability[], private readonly adapters: ReadonlyMap<string, WalletAdapter>, private readonly approve: (request: Readonly<SigningRequest>, review: Readonly<Review>, context: Readonly<ExecutionContext>) => Promise<Approval>) {
     this.#capabilities = deepFreeze(validateCapabilities(capabilities)) as Capability[];
   }
-  close() { this.#closed = true; }
+  close() { this.#closed = true; this.#controller?.abort(); }
   /** Session supplies its expiry; a pending approval cannot extend that lifetime. */
   async handle(value: unknown, now = nowSeconds(), sessionExpires = Number.MAX_SAFE_INTEGER): Promise<unknown> {
     requireThat(!this.#closed && !this.#busy, 'wallet_unavailable');
@@ -66,20 +74,24 @@ export class WalletAuthorizer {
     assertActive();
     requireThat(!this.#seen.has(request.id) && this.#seen.size < 1024, 'duplicate_or_exhausted_request');
     this.#seen.add(request.id); this.#busy = true;
+    const controller = new AbortController(); this.#controller = controller;
+    const timer = setTimeout(() => controller.abort(), Math.max(0, (deadline - nowSeconds()) * 1000));
+    const signal = controller.signal;
+    const context: Readonly<ExecutionContext> = Object.freeze({deadline, signal, assertActive: () => {assertActive(); requireThat(!signal.aborted, 'request_expired');}});
     try {
       const adapter = this.adapters.get(`${request.chain}/${request.method}`); requireThat(adapter, 'unsupported_method');
       const requestDigest = await digest(canonical(request));
       assertActive();
-      const review = await adapter.review(request);
+      const review = await adapter.review(request, context);
       record(review, ['requestDigest', 'summary', 'warnings']);
       requireThat(review.requestDigest === requestDigest && typeof review.summary === 'string' && review.summary.length > 0 && review.summary.length <= 4000 && Array.isArray(review.warnings) && review.warnings.length <= 20 && review.warnings.every(w => typeof w === 'string' && w.length <= 500), 'invalid_review');
       assertActive();
-      const approval = await this.approve(request, deepFreeze(parseJSON(canonical(review))) as Review);
+      const approval = await this.approve(request, deepFreeze(parseJSON(canonical(review))) as Review, context);
       assertActive();
       requireThat(approval.approved === true && approval.requestDigest === requestDigest, 'user_rejected');
-      const result = await adapter.execute(request);
+      const result = await adapter.execute(request, context);
       requireThat(utf8(canonical(result)).length <= 22_000, 'result_too_large'); return result;
-    } finally { this.#busy = false; }
+    } finally { clearTimeout(timer); controller.abort(); this.#controller = undefined; this.#busy = false; }
   }
 }
 export function newRequest(capability: Capability, method: string, params: unknown, now = nowSeconds()): SigningRequest {

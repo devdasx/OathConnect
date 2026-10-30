@@ -32,7 +32,8 @@ actor EchoAdapter: WalletAdapter {
     func validate(_ request: SigningRequest) throws {
         guard request.chain == "oath:test", request.account == "interop-fixture", request.method == "oath_echo", request.params == expectedParams else {throw FixtureError.invalid}
     }
-    func review(_ request: SigningRequest) throws -> TransactionReview {
+    func review(_ request: SigningRequest, context: ExecutionContext) async throws -> TransactionReview {
+        try await context.checkActive()
         try validate(request)
         return TransactionReview(requestDigest: request.digest, summary: "Fixed interoperability echo; no signing or funds", warnings: [])
     }
@@ -42,7 +43,8 @@ actor EchoAdapter: WalletAdapter {
         approvals += 1
         return SigningApproval(approved: true, requestDigest: request.digest)
     }
-    func execute(_ request: SigningRequest) throws -> JSONValue {
+    func execute(_ request: SigningRequest, context: ExecutionContext) async throws -> JSONValue {
+        try await context.checkActive()
         try validate(request)
         guard approvals == 1, executions == 0 else {throw FixtureError.invalid}; executions += 1
         return .object(["echo": request.params, "native": .bool(true)])
@@ -73,7 +75,7 @@ actor EchoAdapter: WalletAdapter {
                 return [try Capability(chain: "oath:test", account: "interop-fixture", methods: ["oath_echo"])]
             }
             let adapter = EchoAdapter()
-            let authorizer = try WalletAuthorizer(capabilities: capabilities, adapters: ["oath:test/oath_echo": adapter], approve: {request, review in try await adapter.approve(request, review)})
+            let authorizer = try WalletAuthorizer(capabilities: capabilities, adapters: ["oath:test/oath_echo": adapter], approve: {request, review, _ in try await adapter.approve(request, review)})
             try await session.serveOnce(authorizer: authorizer)
             let approvals = await adapter.approvals, executions = await adapter.executions
             guard approvals == 1, executions == 1 else {throw FixtureError.invalid}

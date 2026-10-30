@@ -1,0 +1,22 @@
+{
+  "baselineCommit": "596d489a7d4a497d684a65f382f61d594bde40ae",
+  "scope": "Internal native execution-context review by the implementation agent; not an independent audit",
+  "finding": "A detached Swift adapter task did not inherit cancellation of the owning WalletAuthorizer.handle task. Its context check could succeed after that request was cancelled.",
+  "reproduction": {
+    "test": "ExecutionContextTests.testOwningRequestCancellationReachesDetachedExecutionContext",
+    "beforeFix": "Cancellation case recorded one simulated broadcast instead of zero; close and normal completion cases also exercised",
+    "realSigningOrBroadcast": false
+  },
+  "repair": "An owning-request cancellation handler synchronously invalidates a lock-protected lifetime flag. Context validation checks the flag before and after the authorizer actor check; completion also invalidates it.",
+  "afterFix": {
+    "sdkHostTests": 16,
+    "failures": 0,
+    "cancelledDetachedBroadcasts": 0,
+    "closedDetachedBroadcasts": 0,
+    "normalDetachedBroadcasts": 1
+  },
+  "limits": "Adapters must check the execution context after waits and before key use or submission. No check can retract an operation already dispatched.",
+  "productionReady": false,
+  "independentAuditCompleted": false,
+  "oathWalletIntegrated": false
+}

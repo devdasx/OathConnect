@@ -22,7 +22,7 @@ jobs:
       - run: npm ci --ignore-scripts --prefix labs/xrpl && npm audit --audit-level=low --prefix labs/xrpl
       - run: npm ci --ignore-scripts --prefix labs/stellar && npm audit --audit-level=low --prefix labs/stellar
       - run: npm ci --ignore-scripts --prefix labs/sui && npm audit --audit-level=low --prefix labs/sui
-      - run: node --check labs/xrpl/run.mjs && node --check labs/stellar/run.mjs && node --check labs/solana/run.mjs && node --check labs/sui/run.mjs
+      - run: node --check labs/xrpl/run.mjs && node --check labs/stellar/run.mjs && node --check labs/solana/run.mjs && node --check labs/sui/run.mjs && node --check labs/evm/run.mjs
       - run: node --test labs/support/evidence.test.mjs
       - run: node --check labs/browser-native/controller.mjs && node --test labs/browser-native/files.test.mjs
   security:
@@ -74,7 +74,7 @@ jobs:
       - run: npx --no-install wrangler deploy --dry-run
         env:
           WRANGLER_SEND_METRICS: 'false'
-      - run: npm pack --workspace @oathconnect/protocol --workspace @oathconnect/sdk --workspace @oathconnect/thorchain --pack-destination dist
+      - run: npm pack --workspace @oathconnect/protocol --workspace @oathconnect/sdk --workspace @oathconnect/thorchain --workspace @oathconnect/evm --pack-destination dist
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: oathconnect-preview-packages
