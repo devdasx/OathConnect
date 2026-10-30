@@ -24,6 +24,7 @@ jobs:
       - run: npm ci --ignore-scripts --prefix labs/sui && npm audit --audit-level=low --prefix labs/sui
       - run: node --check labs/xrpl/run.mjs && node --check labs/stellar/run.mjs && node --check labs/solana/run.mjs && node --check labs/sui/run.mjs
       - run: node --test labs/support/evidence.test.mjs
+      - run: node --check labs/browser-native/controller.mjs && node --test labs/browser-native/files.test.mjs
   security:
     name: Security analysis
     runs-on: ubuntu-24.04
@@ -54,6 +55,7 @@ jobs:
         with:
           persist-credentials: false
       - run: swift test
+      - run: swift build --package-path labs/browser-native/native
   typescript:
     name: TypeScript and Cloudflare runtime
     runs-on: ubuntu-24.04

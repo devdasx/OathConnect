@@ -34,7 +34,7 @@ export class RelayClient {
     const headers: Record<string, string> = {Authorization: `Oath ${token}`, 'X-Oath-Proof': await createProof(token, o.identity, method, path, body)};
     if (body) headers['Content-Type'] = 'application/json';
     // Native/Node harness only. Browsers set Origin themselves.
-    if (o.origin) headers.Origin = o.origin;
+    if (o.origin && typeof globalThis.location !== 'object') headers.Origin = o.origin;
     let response: Response;
     try { response = await (o.fetch ?? globalThis.fetch)(o.relay + path, {method, headers, ...(body ? {body} : {}), redirect: 'error', credentials: 'omit', cache: 'no-store', signal: AbortSignal.timeout(15_000)}); }
     catch { this.#closed = true; throw new ProtocolError('delivery_unknown_repair_required'); }
