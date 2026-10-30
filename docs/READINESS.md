@@ -105,7 +105,12 @@ provider's finalized receipt and signature status. This is one provider's
 assertion, not independent consensus proof; the check made no submission.
 The local transfer above was on **devnet**; these results are not a matched pair
 on one cluster. Both faucets were free and all transaction keys remained in the
-fixture processes. The temporary server approval is disabled in this source.
+fixture processes. The temporary server approval was disabled through GitHub at
+`9cf339942df6859b1092ac5db1cc6c76bdc1aefa`. A grant admitted before that
+deployment was rejected after it while both the grant and project were still
+within their original lifetimes. A fresh grant was also rejected. No project
+remained enabled, and the private issuer file was removed. See
+[revocation evidence](../evidence/solana-testnet-live-revocation.json).
 
 All 21 Solana host tests pass, including cluster mismatch rejection and
 read-only receipt/finality consistency checks. Internal AI review found no
