@@ -1,1 +1,18 @@
-[]
+[
+  {
+    "id": "oathconnect-validation",
+    "name": "OathConnect disposable testnet validation",
+    "roles": [
+      "wallet",
+      "dapp"
+    ],
+    "origins": [
+      "https://validation.oathconnect.invalid"
+    ],
+    "keys": {
+      "disposable": "7-eougavIuZpxPZs8CjL2wwe7kt6183dW0TSlfEAjSY"
+    },
+    "enabled": true,
+    "notAfter": 1793375152
+  }
+]

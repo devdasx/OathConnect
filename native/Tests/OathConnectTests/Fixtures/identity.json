@@ -1,0 +1,37 @@
+{
+  "notice": "PUBLIC TEST-ONLY KEYS. NEVER USE FOR LIVE AUTHENTICATION.",
+  "now": 1700000000,
+  "relay": "https://relay.example.org",
+  "session": "BAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQ",
+  "project": {
+    "id": "example",
+    "name": "Public interoperability fixture",
+    "roles": [
+      "dapp"
+    ],
+    "origins": [
+      "https://app.example.org"
+    ],
+    "keys": {
+      "one": "6kpsY-KcUgq-9VB7Ey7F-ZVHdq6-vnuSQh7qaRRG0iw"
+    },
+    "enabled": true
+  },
+  "value": {
+    "type": "proposal",
+    "capabilities": [
+      {
+        "chain": "eip155:11155111",
+        "methods": [
+          "eth_sendTransaction"
+        ]
+      }
+    ]
+  },
+  "clientSeed": "BgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgY",
+  "attestation": {
+    "origin": "https://app.example.org",
+    "grant": "eyJhdWRpZW5jZSI6Imh0dHBzOi8vcmVsYXkuZXhhbXBsZS5vcmciLCJjbGllbnRLZXkiOiJpb2RmX3g2emhGRlhlczFhX3VRRlJXVm8zWHlKNEpDR09nVlh2SHIwbnhjIiwiZXhwaXJlcyI6MTcwMDAwMDMwMCwiaWQiOiJDQWdJQ0FnSUNBZ0lDQWdJQ0FnSUNBIiwiaXNzdWVkIjoxNzAwMDAwMDAwLCJraWQiOiJvbmUiLCJvcmlnaW4iOiJodHRwczovL2FwcC5leGFtcGxlLm9yZyIsInByb2plY3QiOiJleGFtcGxlIiwicm9sZSI6ImRhcHAiLCJzZXNzaW9uIjoiQkFRRUJBUUVCQVFFQkFRRUJBUUVCQVFFQkFRRUJBUUVCQVFFQkFRRUJBUSIsInYiOjF9.eCXVAojSCvUPWM2Z8QMSjoqqX3ppkCbtkjaze7LJCbSbWpX2TmC7i9HrhSzWGWY3A3Sj1ybZHVvNplp2RygnCQ",
+    "proof": "eyJ2IjoxLCJhdCI6MTcwMDAwMDAwMCwibm9uY2UiOiJHSjdMTGRMM2xmTXlWanlhY2ZnelZBIiwic2lnbmF0dXJlIjoiTGRqeTl6UGozaFJvYzdzYUtCVy1iTVFjRFZQcmFSMHZBRjhuVU9wdDVhVTNRM3c5bXhXUGVQUk11eXJPMUhGbUdSZXVyWU9tV3pNTnU0TGZHdmsyQ1EifQ"
+  }
+}

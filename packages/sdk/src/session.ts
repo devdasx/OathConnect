@@ -1,4 +1,4 @@
-import {nowSeconds, ProtocolError, record, requireThat, type Project, type SecureChannel} from '@oathconnect/protocol';
+import {nowSeconds, validateProjects, ProtocolError, record, requireThat, type Project, type SecureChannel} from '@oathconnect/protocol';
 import {isSubset, newRequest, validateCapabilities, validateProposal, type Capability, type RequestedCapability, type WalletAuthorizer} from './permissions.js';
 import {RelayClient, type PeerIdentity} from './transport.js';
 
@@ -6,7 +6,7 @@ import {RelayClient, type PeerIdentity} from './transport.js';
 export class Session {
   #cursor = 0; #closed = false; #busy = false; #capabilities: Capability[] | undefined; #activeAuthorizer: WalletAuthorizer | undefined;
   readonly #projects: readonly Project[]; #peer: PeerIdentity | undefined;
-  constructor(private readonly channel: SecureChannel, private readonly relay: RelayClient, trustedProjects: readonly Project[]) {this.#projects = structuredClone(trustedProjects);}
+  constructor(private readonly channel: SecureChannel, private readonly relay: RelayClient, trustedProjects: readonly Project[]) {this.#projects = validateProjects(trustedProjects);}
   get peer(): PeerIdentity | undefined {return this.#peer ? {...this.#peer} : undefined;}
   async #send(value: unknown) { requireThat(!this.#closed, 'session_closed'); await this.relay.send(await this.channel.seal(value)); }
   async #receive(deadline: number): Promise<unknown> {

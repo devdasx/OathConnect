@@ -26,3 +26,20 @@ for (const sender of ['dapp','wallet']) {
 }
 const vector = {notice: 'PUBLIC TEST-ONLY KEYS. NEVER USE FOR LIVE PAIRING.', now, uri: invitationURI(invitation), walletPrivate: b64(scalar(2)), hello: {v:1,session: invitation.session,publicKey:w.raw,mac}, plaintext, frames};
 writeFileSync('native/Tests/OathConnectTests/Fixtures/v1.json', JSON.stringify(vector,null,2)+'\n');
+
+// Public Ed25519 identity/issuer seeds for admission interoperability, never live credentials.
+const {createPrivateKey, createPublicKey} = await import('node:crypto');
+const {canonical, createProof} = await import('@oathconnect/protocol');
+async function edIdentity(n) {
+  const der = Buffer.concat([Buffer.from('302e020100300506032b657004220420','hex'), scalar(n)]);
+  const priv = createPrivateKey({key: der, format: 'der', type: 'pkcs8'});
+  return {privateKey: await crypto.subtle.importKey('pkcs8', der, 'Ed25519', false, ['sign']), publicKey: b64(createPublicKey(priv).export({format: 'der', type: 'spki'}).subarray(-32))};
+}
+const issuer = await edIdentity(7), client = await edIdentity(6);
+const project = {id:'example',name:'Public interoperability fixture',roles:['dapp'],origins:['https://app.example.org'],keys:{one:issuer.publicKey},enabled:true};
+const grant = {v:1,project:project.id,kid:'one',audience:relay,session:invitation.session,role:'dapp',origin:project.origins[0],clientKey:client.publicKey,issued:now,expires:now+300,id:b64(Buffer.alloc(16,8))};
+const payload = b64(utf8(canonical(grant)));
+const token = payload + '.' + b64(new Uint8Array(await crypto.subtle.sign('Ed25519',issuer.privateKey,utf8('OathConnect/grant/v1.'+payload))));
+const value = {type:'proposal',capabilities:[{chain:'eip155:11155111',methods:['eth_sendTransaction']}]};
+const proof = await createProof(token,client,'ATTEST','/v1/sessions/'+invitation.session,canonical(value),now);
+writeFileSync('native/Tests/OathConnectTests/Fixtures/identity.json',JSON.stringify({notice:'PUBLIC TEST-ONLY KEYS. NEVER USE FOR LIVE AUTHENTICATION.',now,relay,session:invitation.session,project,value,clientSeed:b64(scalar(6)),attestation:{origin:grant.origin,grant:token,proof}},null,2)+'\n');

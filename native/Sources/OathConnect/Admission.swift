@@ -22,8 +22,9 @@ private final class NoRedirect: NSObject, URLSessionTaskDelegate, Sendable {
 }
 
 /// Bounded native HTTPS transport. Applications obtain grants from their own approved backend.
-public actor RelayClient {
-    private let relay: String, session: String, identity: ClientIdentity
+public actor RelayClient: WalletRelay {
+    public nonisolated let relay: String, session: String
+    private let identity: ClientIdentity
     private let transport: URLSession
     private var closed = false, busy = false
     public init(relay: String, session: String, identity: ClientIdentity) throws {
@@ -33,6 +34,11 @@ public actor RelayClient {
         config.urlCache = nil; config.httpCookieStorage = nil; config.httpShouldSetCookies = false
         config.timeoutIntervalForRequest = 15; config.timeoutIntervalForResource = 20
         transport = URLSession(configuration: config, delegate: NoRedirect(), delegateQueue: nil)
+    }
+    public func attest(value: Data, grant: String) throws -> Data {
+        try check(!closed, .invalidState)
+        let body = try JSONValue.parse(value).canonical()
+        return try json(["origin": "", "grant": grant, "proof": identity.proof(grant: grant, method: "ATTEST", path: "/v1/sessions/" + session, body: body)])
     }
     public func close() {closed = true; transport.invalidateAndCancel()}
     public func call(method: String, suffix: String, grant: String, body: Data = Data()) async throws -> Data {

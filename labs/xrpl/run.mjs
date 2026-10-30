@@ -3,7 +3,7 @@ import {Client, Wallet} from 'xrpl';
 import {mkdirSync, writeFileSync} from 'node:fs';
 import {canonical, createIdentity, createPairing, digest, joinPairing, ProtocolError} from '@oathconnect/protocol';
 import {Session, WalletAuthorizer} from '@oathconnect/sdk';
-import {fixture} from '../../tests/support/relay.ts';
+import {validationRelay} from '../support/relay.mjs';
 
 const endpoint = 'wss://s.altnet.rippletest.net:51233';
 const chain = 'xrpl:1';
@@ -20,7 +20,7 @@ try {
   await client.fundWallet(sender, {faucetHost: 'faucet.altnet.rippletest.net', amount: '10', usageContext: 'OathConnect open-source testnet qualification'});
   await client.fundWallet(receiver, {faucetHost: 'faucet.altnet.rippletest.net', amount: '10', usageContext: 'OathConnect open-source testnet qualification'});
   stage = 'pair';
-  relay = await fixture(); const pairing = await createPairing(relay.audience); const joined = await joinPairing(pairing.uri, relay.audience);
+  relay = await validationRelay(); const pairing = await createPairing(relay.audience); const joined = await joinPairing(pairing.uri, relay.audience);
   const dc = relay.client(pairing.invitation.session, 'dapp', await createIdentity()); const wc = relay.client(pairing.invitation.session, 'wallet', await createIdentity());
   stage = 'relay_create'; await dc.create(pairing.invitation.expires);
   stage = 'relay_join'; await wc.join(joined.hello);
@@ -47,15 +47,15 @@ try {
   }]]), async (_, review) => {decisions++; return {approved: true, requestDigest: review.requestDigest};});
   stage = 'request_sign_and_confirm';
   const [result] = await Promise.all([dapp.request(cap, cap.methods[0], transaction), walletSession.serveOnce(authorizer)]);
-  const evidence = {started, completed: new Date().toISOString(), chain, network: 'XRP Ledger Testnet', rpc: endpoint, transport: 'local Cloudflare workerd runtime; not a deployed relay test', operation: 'Payment of 1 drop between disposable testnet accounts', status: 'confirmed', ...result, decisions, executions, thorchainSwap: false};
-  mkdirSync('evidence', {recursive:true}); writeFileSync('evidence/xrpl-testnet.json', JSON.stringify(evidence,null,2)+'\n'); console.log(JSON.stringify(evidence));
+  const evidence = {started, completed: new Date().toISOString(), chain, network: 'XRP Ledger Testnet', rpc: endpoint, transport: relay.description, ...(relay.deployedCommit ? {deployedCommit:relay.deployedCommit} : {}), operation: 'Payment of 1 drop between disposable testnet accounts', status: 'confirmed', ...result, decisions, executions, thorchainSwap: false};
+  mkdirSync('evidence', {recursive:true}); writeFileSync(process.env.OATHCONNECT_LIVE_VALIDATION === 'true' ? 'evidence/xrpl-testnet-live.json' : 'evidence/xrpl-testnet.json', JSON.stringify(evidence,null,2)+'\n'); console.log(JSON.stringify(evidence));
 } catch (error) {
   const code = error instanceof ProtocolError ? error.code : error?.constructor?.name;
   const evidence = {started, completed: new Date().toISOString(), chain, network: 'XRP Ledger Testnet', stage, status: 'blocked_or_failed', transactionConfirmed: false, code: /^[a-zA-Z0-9_]{1,100}$/.test(code) ? code : 'unclassified'};
-  mkdirSync('evidence', {recursive:true}); writeFileSync('evidence/xrpl-testnet.json', JSON.stringify(evidence,null,2)+'\n'); console.log(JSON.stringify(evidence)); process.exitCode = 1;
+  mkdirSync('evidence', {recursive:true}); writeFileSync(process.env.OATHCONNECT_LIVE_VALIDATION === 'true' ? 'evidence/xrpl-testnet-live.json' : 'evidence/xrpl-testnet.json', JSON.stringify(evidence,null,2)+'\n'); console.log(JSON.stringify(evidence)); process.exitCode = 1;
 } finally {
   if (dapp) await dapp.close().catch(() => {});
   if (walletSession) await walletSession.close().catch(() => {});
-  if (relay) await relay.mf.dispose();
+  if (relay) await relay.dispose();
   await client.disconnect().catch(() => {});
 }
