@@ -67,7 +67,15 @@ transfer test, not ERC-20 or THORChain swap qualification.
 `node labs/evm/reconcile.mjs local` (or `live`) checks the stored receipt with
 two providers and writes separate dated finality evidence. Canonical inclusion
 and provider-reported finalized height are distinct; neither proves consensus
-independently. ERC-20 qualification, broader operations and other networks
+independently. Both dated checks now place the confirmed transfers within the
+providers' finalized heights. The disposable approval expired while the chat
+was inactive, then its disabled registry deployed at
+`14bc5d1d9dd953a1e501a499ca8741ccb521fd16`. Fresh signed grants were denied
+both after expiry and after disabling; this is not a new within-lifetime
+revocation test. The private issuer file was removed. See
+[cleanup evidence](../evidence/evm-sepolia-live-cleanup.json).
+
+ERC-20 qualification, broader operations and other networks
 remain open.
 
 TypeScript and Swift adapter/approval callbacks receive a request execution
