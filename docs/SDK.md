@@ -22,6 +22,8 @@ The test adapter demonstrates transport and approval control flow only. It does 
 
 Only one operation may run per endpoint at a time. Sessions expire after at most an hour, requests after two minutes, grants after five minutes. Refresh grants through the integrator backend without changing the proof key. Call `close()` on lock, logout, account/network changes or disconnect; revoke the local authorizer too. Endpoints do not persist encryption keys/counters. On process restart, timeout or ambiguous delivery, re-pair. Never automatically retry a request that might already have signed or broadcast.
 
+`serveOnce` bounds authorization by both the request and session expiry, including while a review or approval is pending. Standalone authorizer users must supply their owning session deadline as the third `handle` argument. Closure and expiry prevent dispatching a new execution; they cannot undo an execution already handed to a signing adapter. Adapters must honor wallet locking and cancellation immediately before accessing signing keys and must report uncertain broadcast outcomes without retrying automatically.
+
 The minimal SDK polls every two seconds with bounded mailboxes. Push notifications, background wakeup and session resumption are not implemented.
 
 ## Verified peer identity

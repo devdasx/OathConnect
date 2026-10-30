@@ -38,8 +38,8 @@ private actor SessionAdapter: WalletAdapter {
     func count() -> Int {executed}
 }
 final class SessionTests: XCTestCase, @unchecked Sendable {
-    private func fixture(chain: String = "eip155:11155111") throws -> (WalletSession, TestRelay, Capability) {
-        let now = timestamp(), expires = now + 3600, session = encode64(Data(repeating:4,count:32))
+    private func fixture(chain: String = "eip155:11155111", lifetime: Int = 3600) throws -> (WalletSession, TestRelay, Capability) {
+        let now = timestamp(), expires = now + lifetime, session = encode64(Data(repeating:4,count:32))
         let send = SymmetricKey(size:.bits256), receive = SymmetricKey(size:.bits256)
         let issuer = Curve25519.Signing.PrivateKey(), client = ClientIdentity()
         let project = ApprovedProject(id:"test",name:"Approved test website",roles:["dapp"],origins:["https://app.example.org"],keys:["one":encode64(issuer.publicKey.rawRepresentation)],enabled:true)
@@ -92,5 +92,16 @@ final class SessionTests: XCTestCase, @unchecked Sendable {
         let (session, relay, cap) = try fixture(); try await session.join()
         do {_ = try await session.approveSession {_,_ in await session.close(); return [cap]}; XCTFail("Closed session approved")} catch {}
         let replies = await relay.count(); XCTAssertEqual(replies,0)
+    }
+    func testSessionExpiryDuringApprovalPreventsExecution() async throws {
+        let (session, relay, cap) = try fixture(lifetime: 5); try await session.join()
+        _ = try await session.approveSession {_,_ in [cap]}
+        let expires = relay.expires, adapter = SessionAdapter()
+        let authorizer = try WalletAuthorizer(capabilities:[cap],adapters:[cap.chain+"/test_sign":adapter]) {_,review in
+            try await Task.sleep(for: .seconds(max(0, expires - timestamp()) + 1))
+            return .init(approved:true,requestDigest:review.requestDigest)
+        }
+        do {try await session.serveOnce(authorizer:authorizer); XCTFail("Expired session completed")} catch {}
+        let executed = await adapter.count(); XCTAssertEqual(executed,0)
     }
 }

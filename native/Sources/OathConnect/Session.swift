@@ -42,13 +42,16 @@ public actor WalletSession {
         try begin(); defer {busy = false}
         do {try check(!joined, .invalidState); _ = try await call("PUT", "/peer", hello); joined = true} catch {await terminate(); throw error}
     }
-    private func begin() throws {try check(!closed && !busy, .invalidState); busy = true}
+    private func begin() throws {try Task.checkCancellation(); try check(!closed && !busy, .invalidState); busy = true}
     private func call(_ method: String, _ suffix: String = "", _ body: Data = Data()) async throws -> Data {
+        try Task.checkCancellation()
         try check(!closed, .invalidState); let grant = try await getGrant(); try check(!closed, .invalidState)
+        try Task.checkCancellation()
         let response = try await transport.call(method: method, suffix: suffix, grant: grant, body: body)
         try Task.checkCancellation(); try check(!closed, .invalidState); return response
     }
     private func send(_ value: JSONValue) async throws {
+        try Task.checkCancellation()
         try check(!closed, .invalidState)
         let frame = try await channel.seal(json: value.canonical())
         _ = try await call("POST", "/messages", frame)
@@ -101,7 +104,7 @@ public actor WalletSession {
             try check(!seen.contains(request.id) && seen.count < 1024, .replayOrGap); seen.insert(request.id)
             activeAuthorizer = authorizer
             var result: JSONValue = .null, responseError: JSONValue = .null
-            do {result = try await authorizer.handle(data)} catch {responseError = .string("rejected")}
+            do {result = try await authorizer.handle(data, sessionExpires: channel.expires)} catch {responseError = .string("rejected")}
             activeAuthorizer = nil
             try await send(.object(["type": .string("response"), "id": .string(request.id), "result": result, "error": responseError]))
         } catch {await terminate(); throw error}
